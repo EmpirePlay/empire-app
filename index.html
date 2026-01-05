@@ -7,33 +7,48 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --gold: #d4af37; --bg: #0f0f0f; --panel: #1a1a1a; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding: 0; height: 100vh; 
+            display: flex; flex-direction: column; overflow: hidden; 
+        }
         
-        /* Верхняя панель с балансом */
+        /* Шапка */
         .top-bar { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--panel); border-bottom: 1px solid #333; }
         .balance-box { background: #000; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 1.1rem; }
 
-        /* Контент вкладок */
+        /* Контент */
         .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .tab-content.active { display: flex; }
 
-        /* Игровые элементы (Слоты) */
+        /* Слот-машина */
         .reels { display: flex; gap: 10px; margin-bottom: 30px; }
-        .reel { width: 80px; height: 100px; background: #000; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 3rem; box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+        .reel { 
+            width: 80px; height: 100px; background: #000; 
+            border: 2px solid #333; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 3rem; transition: transform 0.1s;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); 
+        }
         
-        /* Кнопки */
-        .btn { background: var(--gold); color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: bold; width: 100%; max-width: 280px; font-size: 1.1rem; text-transform: uppercase; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.96); }
+        /* Кнопка */
+        .btn { 
+            background: var(--gold); color: #000; border: none; 
+            padding: 18px; border-radius: 15px; font-weight: bold; 
+            width: 100%; max-width: 280px; font-size: 1.1rem; 
+            text-transform: uppercase; cursor: pointer;
+        }
+        .btn:disabled { background: #555; cursor: not-allowed; }
 
         /* Настройки */
         .settings-list { width: 100%; max-width: 320px; }
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #333; }
-        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 8px; border-radius: 8px; font-size: 1rem; }
-        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold); }
+        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 8px; border-radius: 8px; }
 
-        /* Нижнее меню навигации */
-        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 12px 0; padding-bottom: 25px; }
-        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+        /* Навигация */
+        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 12px 0 25px 0; }
+        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.85rem; }
         .nav-item.active { color: var(--gold); }
         .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
     </style>
@@ -52,11 +67,10 @@
             <div id="r3" class="reel">💎</div>
         </div>
         <button class="btn" id="btn-spin" onclick="spin()">КРУТИТЬ</button>
-        <p id="status" style="margin-top: 20px; color: #777;"></p>
+        <p id="status" style="margin-top: 20px; color: #777;">Удачи!</p>
     </div>
 
     <div id="settings-tab" class="tab-content">
-        <h2 id="label-settings">Настройки</h2>
         <div class="settings-list">
             <div class="setting-item">
                 <span id="label-lang">Язык интерфейса</span>
@@ -66,7 +80,7 @@
                 </select>
             </div>
             <div class="setting-item">
-                <span id="label-vibrate">Вибрация (Haptic)</span>
+                <span id="label-vibrate">Вибрация</span>
                 <input type="checkbox" id="vibrateCheck" checked onchange="saveSettings()">
             </div>
         </div>
@@ -85,85 +99,71 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        const langData = {
-            ru: { app: "EMPIRE APP", game: "Игра", settings: "Настройки", lang: "Язык интерфейса", vibrate: "Вибрация (Haptic)", spin: "КРУТИТЬ", status: "Испытай удачу!" },
-            en: { app: "EMPIRE APP", game: "Game", settings: "Settings", lang: "Language", vibrate: "Haptic Feedback", spin: "SPIN", status: "Good luck!" }
-        };
+        const icons = ['💎', '🎰', '🌟', '🍒', '7️⃣'];
 
-        // 1. Получение баланса из URL (от бота)
+        // Считываем баланс из URL
         function updateBalanceFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            const balanceFromUrl = urlParams.get('balance');
-            if (balanceFromUrl !== null) {
-                document.getElementById('balance').innerText = balanceFromUrl;
-            }
+            const balance = urlParams.get('balance');
+            if (balance) document.getElementById('balance').innerText = balance;
         }
 
-        // 2. Логика переключения вкладок
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tab + '-tab').classList.add('active');
             document.getElementById('nav-' + tab).classList.add('active');
-            
-            // Легкая вибрация при смене вкладки
             if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // 3. Сохранение настроек
+        // КРАСИВАЯ ПРОКРУТКА
+        async function spin() {
+            const btn = document.getElementById('btn-spin');
+            const status = document.getElementById('status');
+            const isVibrate = document.getElementById('vibrateCheck').checked;
+
+            btn.disabled = true;
+            status.innerText = "Вращаем...";
+
+            // Анимация вращения
+            for (let i = 0; i < 12; i++) {
+                document.getElementById('r1').innerText = icons[Math.floor(Math.random() * icons.length)];
+                document.getElementById('r2').innerText = icons[Math.floor(Math.random() * icons.length)];
+                document.getElementById('r3').innerText = icons[Math.floor(Math.random() * icons.length)];
+                
+                if(isVibrate && i % 2 === 0) tg.HapticFeedback.impactOccurred('light');
+                await new Promise(r => setTimeout(r, 100)); // Скорость смены кадров
+            }
+
+            // Финальный результат
+            const res = [
+                icons[Math.floor(Math.random() * icons.length)],
+                icons[Math.floor(Math.random() * icons.length)],
+                icons[Math.floor(Math.random() * icons.length)]
+            ];
+
+            document.getElementById('r1').innerText = res[0];
+            document.getElementById('r2').innerText = res[1];
+            document.getElementById('r3').innerText = res[2];
+
+            if (res[0] === res[1] && res[1] === res[2]) {
+                status.innerText = "ВЫИГРЫШ! 🎉";
+                if(isVibrate) tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                status.innerText = "Попробуй снова";
+            }
+
+            btn.disabled = false;
+        }
+
         function saveSettings() {
-            const settings = {
+            localStorage.setItem('empire_set', JSON.stringify({
                 lang: document.getElementById('langSelect').value,
                 vibrate: document.getElementById('vibrateCheck').checked
-            };
-            localStorage.setItem('empire_settings', JSON.stringify(settings));
+            }));
         }
 
-        // 4. Смена языка
-        function changeLang() {
-            const lang = document.getElementById('langSelect').value;
-            const d = langData[lang];
-            document.getElementById('label-app').innerText = d.app;
-            document.getElementById('nav-label-game').innerText = d.game;
-            document.getElementById('nav-label-settings').innerText = d.settings;
-            document.getElementById('label-settings').innerText = d.settings;
-            document.getElementById('label-lang').innerText = d.lang;
-            document.getElementById('label-vibrate').innerText = d.vibrate;
-            document.getElementById('btn-spin').innerText = d.spin;
-            document.getElementById('status').innerText = d.status;
-            saveSettings();
-        }
-
-        // 5. Логика вращения (визуальная)
-        function spin() {
-            const isVibrate = document.getElementById('vibrateCheck').checked;
-            if(isVibrate) tg.HapticFeedback.impactOccurred('medium');
-            
-            const icons = ['💎', '🎰', '🌟', '🍒', '7️⃣'];
-            const r1 = icons[Math.floor(Math.random() * icons.length)];
-            const r2 = icons[Math.floor(Math.random() * icons.length)];
-            const r3 = icons[Math.floor(Math.random() * icons.length)];
-            
-            document.getElementById('r1').innerText = r1;
-            document.getElementById('r2').innerText = r2;
-            document.getElementById('r3').innerText = r3;
-
-            if(r1 === r2 && r2 === r3) {
-                if(isVibrate) tg.HapticFeedback.notificationOccurred('success');
-                document.getElementById('status').innerText = "JACKPOT! 🎉";
-            }
-        }
-
-        // Запуск при старте
         updateBalanceFromUrl();
-        const saved = JSON.parse(localStorage.getItem('empire_settings'));
-        if(saved) {
-            document.getElementById('langSelect').value = saved.lang;
-            document.getElementById('vibrateCheck').checked = saved.vibrate;
-            changeLang();
-        } else {
-            document.getElementById('status').innerText = langData.ru.status;
-        }
     </script>
 </body>
 </html>
