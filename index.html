@@ -3,77 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Empire Slots</title>
+    <title>Empire Casino Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #121212; color: #fff; font-family: 'Arial', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .slot-machine { background: #1c1c1c; border: 4px solid #d4af37; border-radius: 20px; padding: 30px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); text-align: center; }
-        .reels { display: flex; gap: 15px; margin: 20px 0; }
-        .reel { width: 80px; height: 100px; background: #000; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 3rem; transition: transform 0.1s; }
-        .spin-btn { background: linear-gradient(180deg, #d4af37, #b8860b); border: none; padding: 15px 40px; color: #000; font-weight: 900; border-radius: 12px; cursor: pointer; font-size: 1.2rem; width: 100%; box-shadow: 0 4px 0 #7a5d07; }
-        .spin-btn:active { transform: translateY(4px); box-shadow: none; }
-        .spin-btn:disabled { background: #444; color: #888; box-shadow: none; transform: translateY(4px); }
-        .status { color: #d4af37; font-weight: bold; margin-top: 15px; min-height: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        :root { --gold: #d4af37; --bg: #0f0f0f; --panel: #1a1a1a; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Баланс и Шапка */
+        .top-bar { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--panel); border-bottom: 1px solid #333; }
+        .balance-box { background: #000; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+
+        /* Контент вкладок */
+        .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .tab-content.active { display: flex; }
+
+        /* Слот-машина */
+        .reels { display: flex; gap: 10px; margin: 20px 0; }
+        .reel { width: 70px; height: 90px; background: #000; border: 2px solid #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        
+        /* Кнопки и Настройки */
+        .btn { background: var(--gold); color: #000; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; width: 100%; max-width: 250px; }
+        .settings-list { width: 100%; max-width: 300px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #333; }
+        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 5px; border-radius: 5px; }
+
+        /* Нижнее меню */
+        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 10px 0; }
+        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.8rem; cursor: pointer; }
+        .nav-item.active { color: var(--gold); }
+        .nav-icon { font-size: 1.5rem; display: block; }
     </style>
 </head>
 <body>
 
-    <div class="slot-machine">
-        <h1 style="color: #d4af37; margin: 0; font-size: 1.5rem;">EMPIRE SLOTS</h1>
+    <div class="top-bar">
+        <span id="label-app">EMPIRE APP</span>
+        <div class="balance-box">💰 <span id="balance">1000</span> ★</div>
+    </div>
+
+    <div id="game-tab" class="tab-content active">
         <div class="reels">
             <div id="r1" class="reel">💎</div>
             <div id="r2" class="reel">💎</div>
             <div id="r3" class="reel">💎</div>
         </div>
-        <button id="spinBtn" class="spin-btn" onclick="startSpin()">КРУТИТЬ</button>
-        <div id="status" class="status">ИСПЫТАЙ УДАЧУ!</div>
+        <button class="btn" id="btn-spin" onclick="spin()">КРУТИТЬ</button>
+        <p id="status"></p>
+    </div>
+
+    <div id="settings-tab" class="tab-content">
+        <h2 id="label-settings">Настройки</h2>
+        <div class="settings-list">
+            <div class="setting-item">
+                <span id="label-lang">Язык</span>
+                <select id="langSelect" onchange="changeLang()">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <span id="label-vibrate">Вибрация</span>
+                <input type="checkbox" id="vibrateCheck" checked onchange="saveSettings()">
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-game" onclick="showTab('game')">
+            <span class="nav-icon">🎮</span> <span id="nav-label-game">Игра</span>
+        </div>
+        <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
+            <span class="nav-icon">⚙️</span> <span id="nav-label-settings">Опции</span>
+        </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
 
-        const symbols = ['💎', '🎰', '🌟', '🍒', '🍋', '7️⃣'];
-        const spinBtn = document.getElementById('spinBtn');
-        const status = document.getElementById('status');
+        const langData = {
+            ru: { app: "EMPIRE APP", game: "Игра", settings: "Настройки", lang: "Язык", vibrate: "Вибрация", spin: "КРУТИТЬ", status: "Испытай удачу!" },
+            en: { app: "EMPIRE APP", game: "Game", settings: "Settings", lang: "Language", vibrate: "Vibration", spin: "SPIN", status: "Good luck!" }
+        };
 
-        function startSpin() {
-            spinBtn.disabled = true;
-            status.innerText = "КРУТИМ...";
-            
-            let count = 0;
-            const maxCounts = 15;
-            
-            const interval = setInterval(() => {
-                document.getElementById('r1').innerText = symbols[Math.floor(Math.random() * symbols.length)];
-                document.getElementById('r2').innerText = symbols[Math.floor(Math.random() * symbols.length)];
-                document.getElementById('r3').innerText = symbols[Math.floor(Math.random() * symbols.length)];
-                count++;
-                
-                if (count >= maxCounts) {
-                    clearInterval(interval);
-                    finishSpin();
-                }
-            }, 100);
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+            document.getElementById('nav-' + tab).classList.add('active');
         }
 
-        function finishSpin() {
-            const r1 = document.getElementById('r1').innerText;
-            const r2 = document.getElementById('r2').innerText;
-            const r3 = document.getElementById('r3').innerText;
+        function saveSettings() {
+            const settings = {
+                lang: document.getElementById('langSelect').value,
+                vibrate: document.getElementById('vibrateCheck').checked
+            };
+            localStorage.setItem('empire_settings', JSON.stringify(settings));
+        }
+
+        function changeLang() {
+            const lang = document.getElementById('langSelect').value;
+            const d = langData[lang];
+            document.getElementById('label-app').innerText = d.app;
+            document.getElementById('nav-label-game').innerText = d.game;
+            document.getElementById('nav-label-settings').innerText = d.settings;
+            document.getElementById('label-settings').innerText = d.settings;
+            document.getElementById('label-lang').innerText = d.lang;
+            document.getElementById('label-vibrate').innerText = d.vibrate;
+            document.getElementById('btn-spin').innerText = d.spin;
+            saveSettings();
+        }
+
+        function spin() {
+            const isVibrate = document.getElementById('vibrateCheck').checked;
+            if(isVibrate) tg.HapticFeedback.impactOccurred('medium');
             
-            spinBtn.disabled = false;
+            const icons = ['💎', '🎰', '🌟', '🍒'];
+            const r1 = icons[Math.floor(Math.random()*4)];
+            const r2 = icons[Math.floor(Math.random()*4)];
+            const r3 = icons[Math.floor(Math.random()*4)];
             
-            if (r1 === r2 && r2 === r3) {
-                status.innerText = "💰 ДЖЕКПОТ!";
-                tg.HapticFeedback.notificationOccurred('success');
-            } else if (r1 === r2 || r2 === r3 || r1 === r3) {
-                status.innerText = "✨ ПОЧТИ УДАЧА!";
-                tg.HapticFeedback.impactOccurred('medium');
-            } else {
-                status.innerText = "ПОПРОБУЙ СНОВА";
-            }
+            document.getElementById('r1').innerText = r1;
+            document.getElementById('r2').innerText = r2;
+            document.getElementById('r3').innerText = r3;
+
+            if(r1 === r2 && r2 === r3 && isVibrate) tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        // Загрузка настроек при старте
+        const saved = JSON.parse(localStorage.getItem('empire_settings'));
+        if(saved) {
+            document.getElementById('langSelect').value = saved.lang;
+            document.getElementById('vibrateCheck').checked = saved.vibrate;
+            changeLang();
         }
     </script>
 </body>
