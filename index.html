@@ -3,42 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Empire Casino Pro</title>
+    <title>Empire Casino Web</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --gold: #d4af37; --bg: #0f0f0f; --panel: #1a1a1a; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Баланс и Шапка */
+        /* Верхняя панель с балансом */
         .top-bar { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--panel); border-bottom: 1px solid #333; }
-        .balance-box { background: #000; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+        .balance-box { background: #000; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 1.1rem; }
 
         /* Контент вкладок */
         .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .tab-content.active { display: flex; }
 
-        /* Слот-машина */
-        .reels { display: flex; gap: 10px; margin: 20px 0; }
-        .reel { width: 70px; height: 90px; background: #000; border: 2px solid #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        /* Игровые элементы (Слоты) */
+        .reels { display: flex; gap: 10px; margin-bottom: 30px; }
+        .reel { width: 80px; height: 100px; background: #000; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 3rem; box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
         
-        /* Кнопки и Настройки */
-        .btn { background: var(--gold); color: #000; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; width: 100%; max-width: 250px; }
-        .settings-list { width: 100%; max-width: 300px; }
-        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #333; }
-        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 5px; border-radius: 5px; }
+        /* Кнопки */
+        .btn { background: var(--gold); color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: bold; width: 100%; max-width: 280px; font-size: 1.1rem; text-transform: uppercase; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.96); }
 
-        /* Нижнее меню */
-        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 10px 0; }
-        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.8rem; cursor: pointer; }
+        /* Настройки */
+        .settings-list { width: 100%; max-width: 320px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #333; }
+        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 8px; border-radius: 8px; font-size: 1rem; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold); }
+
+        /* Нижнее меню навигации */
+        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 12px 0; padding-bottom: 25px; }
+        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--gold); }
-        .nav-icon { font-size: 1.5rem; display: block; }
+        .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <span id="label-app">EMPIRE APP</span>
-        <div class="balance-box">💰 <span id="balance">1000</span> ★</div>
+        <span id="label-app" style="font-weight: bold; letter-spacing: 1px;">EMPIRE APP</span>
+        <div class="balance-box">💰 <span id="balance">0</span> ★</div>
     </div>
 
     <div id="game-tab" class="tab-content active">
@@ -48,21 +52,21 @@
             <div id="r3" class="reel">💎</div>
         </div>
         <button class="btn" id="btn-spin" onclick="spin()">КРУТИТЬ</button>
-        <p id="status"></p>
+        <p id="status" style="margin-top: 20px; color: #777;"></p>
     </div>
 
     <div id="settings-tab" class="tab-content">
         <h2 id="label-settings">Настройки</h2>
         <div class="settings-list">
             <div class="setting-item">
-                <span id="label-lang">Язык</span>
+                <span id="label-lang">Язык интерфейса</span>
                 <select id="langSelect" onchange="changeLang()">
                     <option value="ru">Русский</option>
                     <option value="en">English</option>
                 </select>
             </div>
             <div class="setting-item">
-                <span id="label-vibrate">Вибрация</span>
+                <span id="label-vibrate">Вибрация (Haptic)</span>
                 <input type="checkbox" id="vibrateCheck" checked onchange="saveSettings()">
             </div>
         </div>
@@ -82,17 +86,31 @@
         tg.expand();
 
         const langData = {
-            ru: { app: "EMPIRE APP", game: "Игра", settings: "Настройки", lang: "Язык", vibrate: "Вибрация", spin: "КРУТИТЬ", status: "Испытай удачу!" },
-            en: { app: "EMPIRE APP", game: "Game", settings: "Settings", lang: "Language", vibrate: "Vibration", spin: "SPIN", status: "Good luck!" }
+            ru: { app: "EMPIRE APP", game: "Игра", settings: "Настройки", lang: "Язык интерфейса", vibrate: "Вибрация (Haptic)", spin: "КРУТИТЬ", status: "Испытай удачу!" },
+            en: { app: "EMPIRE APP", game: "Game", settings: "Settings", lang: "Language", vibrate: "Haptic Feedback", spin: "SPIN", status: "Good luck!" }
         };
 
+        // 1. Получение баланса из URL (от бота)
+        function updateBalanceFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const balanceFromUrl = urlParams.get('balance');
+            if (balanceFromUrl !== null) {
+                document.getElementById('balance').innerText = balanceFromUrl;
+            }
+        }
+
+        // 2. Логика переключения вкладок
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tab + '-tab').classList.add('active');
             document.getElementById('nav-' + tab).classList.add('active');
+            
+            // Легкая вибрация при смене вкладки
+            if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.impactOccurred('light');
         }
 
+        // 3. Сохранение настроек
         function saveSettings() {
             const settings = {
                 lang: document.getElementById('langSelect').value,
@@ -101,6 +119,7 @@
             localStorage.setItem('empire_settings', JSON.stringify(settings));
         }
 
+        // 4. Смена языка
         function changeLang() {
             const lang = document.getElementById('langSelect').value;
             const d = langData[lang];
@@ -111,31 +130,39 @@
             document.getElementById('label-lang').innerText = d.lang;
             document.getElementById('label-vibrate').innerText = d.vibrate;
             document.getElementById('btn-spin').innerText = d.spin;
+            document.getElementById('status').innerText = d.status;
             saveSettings();
         }
 
+        // 5. Логика вращения (визуальная)
         function spin() {
             const isVibrate = document.getElementById('vibrateCheck').checked;
             if(isVibrate) tg.HapticFeedback.impactOccurred('medium');
             
-            const icons = ['💎', '🎰', '🌟', '🍒'];
-            const r1 = icons[Math.floor(Math.random()*4)];
-            const r2 = icons[Math.floor(Math.random()*4)];
-            const r3 = icons[Math.floor(Math.random()*4)];
+            const icons = ['💎', '🎰', '🌟', '🍒', '7️⃣'];
+            const r1 = icons[Math.floor(Math.random() * icons.length)];
+            const r2 = icons[Math.floor(Math.random() * icons.length)];
+            const r3 = icons[Math.floor(Math.random() * icons.length)];
             
             document.getElementById('r1').innerText = r1;
             document.getElementById('r2').innerText = r2;
             document.getElementById('r3').innerText = r3;
 
-            if(r1 === r2 && r2 === r3 && isVibrate) tg.HapticFeedback.notificationOccurred('success');
+            if(r1 === r2 && r2 === r3) {
+                if(isVibrate) tg.HapticFeedback.notificationOccurred('success');
+                document.getElementById('status').innerText = "JACKPOT! 🎉";
+            }
         }
 
-        // Загрузка настроек при старте
+        // Запуск при старте
+        updateBalanceFromUrl();
         const saved = JSON.parse(localStorage.getItem('empire_settings'));
         if(saved) {
             document.getElementById('langSelect').value = saved.lang;
             document.getElementById('vibrateCheck').checked = saved.vibrate;
             changeLang();
+        } else {
+            document.getElementById('status').innerText = langData.ru.status;
         }
     </script>
 </body>
