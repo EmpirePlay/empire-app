@@ -3,167 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Empire Casino Web</title>
+    <title>Empire Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #d4af37; --bg: #0f0f0f; --panel: #1a1a1a; --text: #ffffff; }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            margin: 0; padding: 0; height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden; 
+        /* --- 1. ОСНОВНЫЕ СТИЛИ И ЦВЕТА --- */
+        :root {
+            --bg-color: #1e1e1e;       /* Сероватый фон */
+            --panel-color: #2b2b2b;    /* Цвет блоков */
+            --gold: #FFD700;           /* Золото */
+            --text-main: #ffffff;
+            --text-sec: #aaaaaa;
+            --danger: #ff4d4d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Чтобы не скроллилась страница целиком */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 2. ШАПКА --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--panel-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .menu-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-main);
+        }
+
+        .balance-container {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- 3. БОКОВОЕ МЕНЮ (SIDEBAR) --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+            opacity: 0; pointer-events: none;
+            transition: 0.3s;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; height: 100%; width: 280px;
+            background: #252525;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .sidebar.active { transform: translateX(0); }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+        .user-avatar { font-size: 50px; margin-bottom: 10px; display: block;}
+        .user-name { font-size: 1.2rem; font-weight: bold; display: block; }
+        .user-id { font-size: 0.9rem; color: var(--text-sec); display: block; margin-top: 5px; }
+
+        .menu-item {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
         }
         
-        /* Шапка */
-        .top-bar { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--panel); border-bottom: 1px solid #333; }
-        .balance-box { background: #000; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 1.1rem; }
+        /* Стили переключателей */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--gold); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        /* Контент */
-        .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .tab-content.active { display: flex; }
-
-        /* Слот-машина */
-        .reels { display: flex; gap: 10px; margin-bottom: 30px; }
-        .reel { 
-            width: 80px; height: 100px; background: #000; 
-            border: 2px solid #333; border-radius: 12px; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 3rem; transition: transform 0.1s;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); 
+        .btn-exit {
+            margin-top: auto;
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
         }
-        
-        /* Кнопка */
-        .btn { 
-            background: var(--gold); color: #000; border: none; 
-            padding: 18px; border-radius: 15px; font-weight: bold; 
-            width: 100%; max-width: 280px; font-size: 1.1rem; 
-            text-transform: uppercase; cursor: pointer;
+
+        /* --- 4. ИГРОВАЯ ЗОНА --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
         }
-        .btn:disabled { background: #555; cursor: not-allowed; }
 
-        /* Настройки */
-        .settings-list { width: 100%; max-width: 320px; }
-        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #333; }
-        select { background: #333; color: #fff; border: 1px solid var(--gold); padding: 8px; border-radius: 8px; }
+        .roulette-wrapper {
+            width: 100%;
+            max-width: 350px;
+            height: 120px;
+            background: #000;
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        }
 
-        /* Навигация */
-        .bottom-nav { display: flex; background: var(--panel); border-top: 1px solid #333; padding: 12px 0 25px 0; }
-        .nav-item { flex: 1; text-align: center; color: #777; font-size: 0.85rem; }
-        .nav-item.active { color: var(--gold); }
-        .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+        /* Указатель выигрыша (стрелочка) */
+        .pointer {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 100%;
+            background: rgba(255, 0, 0, 0.5);
+            z-index: 5;
+            border-left: 1px solid red;
+            border-right: 1px solid red;
+        }
+
+        .tape {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); /* Эффект торможения */
+            will-change: transform;
+        }
+
+        .card {
+            min-width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            border-right: 1px solid #333;
+        }
+
+        .spin-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            margin-bottom: 10px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .spin-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+
+        .cost-label { color: #777; font-size: 0.9rem; margin-bottom: 20px; }
+
+        /* --- 5. ТАБЛИЦА ВЫПЛАТ (ЛЕГЕНДА) --- */
+        .paytable {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            background: var(--panel-color);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .pay-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .pay-icon { font-size: 24px; margin-bottom: 4px; }
+        .pay-val { font-size: 0.8rem; color: var(--gold); font-weight: bold; }
+
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <span id="label-app" style="font-weight: bold; letter-spacing: 1px;">EMPIRE APP</span>
-        <div class="balance-box">💰 <span id="balance">0</span> ★</div>
-    </div>
-
-    <div id="game-tab" class="tab-content active">
-        <div class="reels">
-            <div id="r1" class="reel">💎</div>
-            <div id="r2" class="reel">💎</div>
-            <div id="r3" class="reel">💎</div>
+    <div class="overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="user-info">
+            <span class="user-avatar">👤</span>
+            <span class="user-name" id="menu-username">Loading...</span>
+            <span class="user-id" id="menu-userid">ID: ...</span>
         </div>
-        <button class="btn" id="btn-spin" onclick="spin()">КРУТИТЬ</button>
-        <p id="status" style="margin-top: 20px; color: #777;">Удачи!</p>
-    </div>
 
-    <div id="settings-tab" class="tab-content">
-        <div class="settings-list">
-            <div class="setting-item">
-                <span id="label-lang">Язык интерфейса</span>
-                <select id="langSelect" onchange="changeLang()">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
-            <div class="setting-item">
-                <span id="label-vibrate">Вибрация</span>
+        <div class="menu-item">
+            <span data-lang="vibration">Вибрация</span>
+            <label class="switch">
                 <input type="checkbox" id="vibrateCheck" checked onchange="saveSettings()">
-            </div>
+                <span class="slider"></span>
+            </label>
         </div>
+
+        <div class="menu-item">
+            <span data-lang="language">Язык (RU/EN)</span>
+            <label class="switch">
+                <input type="checkbox" id="langCheck" onchange="toggleLang()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn-exit" onclick="closeApp()" data-lang="exit">Выход с веба</button>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" id="nav-game" onclick="showTab('game')">
-            <span class="nav-icon">🎮</span> <span id="nav-label-game">Игра</span>
+    <header>
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="balance-container">
+            <span id="balance">0</span> ★
         </div>
-        <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
-            <span class="nav-icon">⚙️</span> <span id="nav-label-settings">Опции</span>
+    </header>
+
+    <main>
+        <h2 style="margin-top:0; color:var(--gold);" data-lang="game_title">Empire Roulette</h2>
+        
+        <div class="roulette-wrapper">
+            <div class="pointer"></div>
+            <div class="tape" id="tape">
+                </div>
         </div>
-    </div>
+
+        <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
+        <p class="cost-label"><span data-lang="cost">Стоимость:</span> 50 ★</p>
+
+        <div class="paytable" id="paytable">
+            </div>
+
+        <p id="msg" style="height: 20px; color: var(--gold); font-weight: bold;"></p>
+    </main>
 
     <script>
-        let tg = window.Telegram.WebApp;
+        const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.enableClosingConfirmation();
 
-        const icons = ['💎', '🎰', '🌟', '🍒', '7️⃣'];
+        // --- ДАННЫЕ ИГРЫ (12 СТИКЕРОВ) ---
+        // val = выигрыш (сколько вернется на баланс)
+        const items = [
+            { icon: '🍒', val: 0 },   // Пустышка
+            { icon: '🍋', val: 10 },  // Вернет 10 (потерял 40)
+            { icon: '🍇', val: 25 },  // Потерял 25
+            { icon: '🍉', val: 50 },  // Возврат ставки
+            { icon: '🔔', val: 75 },  // +25
+            { icon: '🍀', val: 100 }, // x2
+            { icon: '🎲', val: 150 }, // x3
+            { icon: '🎰', val: 200 }, // x4
+            { icon: '🎱', val: 250 }, // x5
+            { icon: '🎩', val: 300 }, // x6
+            { icon: '👑', val: 500 }, // x10
+            { icon: '💎', val: 1000 } // JACKPOT x20
+        ];
 
-        // Считываем баланс из URL
-        function updateBalanceFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const balance = urlParams.get('balance');
-            if (balance) document.getElementById('balance').innerText = balance;
-        }
+        // --- СОСТОЯНИЕ ---
+        let currentBalance = 0;
+        let isSpinning = false;
+        
+        // Переменные для перевода
+        const texts = {
+            ru: { vibration: "Вибрация", language: "Язык (RU/EN)", exit: "Выход с веба", game_title: "Рулетка Империи", cost: "Стоимость:", msg_win: "ВЫИГРЫШ: ", msg_lose: "Попробуй снова", msg_no_money: "Недостаточно средств!" },
+            en: { vibration: "Vibration", language: "Language (RU/EN)", exit: "Exit Web App", game_title: "Empire Roulette", cost: "Cost:", msg_win: "YOU WON: ", msg_lose: "Try Again", msg_no_money: "Not enough funds!" }
+        };
 
-        function showTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(tab + '-tab').classList.add('active');
-            document.getElementById('nav-' + tab).classList.add('active');
-            if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.impactOccurred('light');
-        }
-
-        // КРАСИВАЯ ПРОКРУТКА
-        async function spin() {
-            const btn = document.getElementById('btn-spin');
-            const status = document.getElementById('status');
-            const isVibrate = document.getElementById('vibrateCheck').checked;
-
-            btn.disabled = true;
-            status.innerText = "Вращаем...";
-
-            // Анимация вращения
-            for (let i = 0; i < 12; i++) {
-                document.getElementById('r1').innerText = icons[Math.floor(Math.random() * icons.length)];
-                document.getElementById('r2').innerText = icons[Math.floor(Math.random() * icons.length)];
-                document.getElementById('r3').innerText = icons[Math.floor(Math.random() * icons.length)];
-                
-                if(isVibrate && i % 2 === 0) tg.HapticFeedback.impactOccurred('light');
-                await new Promise(r => setTimeout(r, 100)); // Скорость смены кадров
-            }
-
-            // Финальный результат
-            const res = [
-                icons[Math.floor(Math.random() * icons.length)],
-                icons[Math.floor(Math.random() * icons.length)],
-                icons[Math.floor(Math.random() * icons.length)]
-            ];
-
-            document.getElementById('r1').innerText = res[0];
-            document.getElementById('r2').innerText = res[1];
-            document.getElementById('r3').innerText = res[2];
-
-            if (res[0] === res[1] && res[1] === res[2]) {
-                status.innerText = "ВЫИГРЫШ! 🎉";
-                if(isVibrate) tg.HapticFeedback.notificationOccurred('success');
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function init() {
+            // 1. Получаем данные юзера
+            const user = tg.initDataUnsafe.user;
+            if (user) {
+                document.getElementById('menu-username').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                document.getElementById('menu-userid').innerText = 'ID: ' + user.id;
             } else {
-                status.innerText = "Попробуй снова";
+                document.getElementById('menu-username').innerText = 'Guest Player';
+                document.getElementById('menu-userid').innerText = 'ID: Unknown';
             }
 
-            btn.disabled = false;
+            // 2. Получаем баланс из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const balParam = urlParams.get('balance');
+            if (balParam) currentBalance = parseInt(balParam);
+            updateBalanceUI();
+
+            // 3. Загружаем настройки
+            const savedSettings = JSON.parse(localStorage.getItem('empire_web_settings'));
+            if (savedSettings) {
+                document.getElementById('vibrateCheck').checked = savedSettings.vibrate;
+                document.getElementById('langCheck').checked = (savedSettings.lang === 'en');
+            }
+            applyLang();
+
+            // 4. Строим ленту (Tape) и Таблицу (Paytable)
+            buildGame();
+        }
+
+        // --- ПОСТРОЕНИЕ ИГРЫ ---
+        function buildGame() {
+            const tape = document.getElementById('tape');
+            const paytable = document.getElementById('paytable');
+
+            // Заполняем ленту (генерируем много копий для иллюзии бесконечности)
+            // Мы сделаем 50 элементов.
+            let html = '';
+            for(let i=0; i<50; i++) {
+                // Просто случайные картинки для фона
+                const randItem = items[Math.floor(Math.random() * items.length)];
+                html += `<div class="card">${randItem.icon}</div>`;
+            }
+            tape.innerHTML = html;
+
+            // Заполняем таблицу выплат
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'pay-item';
+                div.innerHTML = `<div class="pay-icon">${item.icon}</div><div class="pay-val">${item.val}</div>`;
+                paytable.appendChild(div);
+            });
+        }
+
+        // --- ЛОГИКА МЕНЮ ---
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.overlay').classList.toggle('active');
+            haptic('light');
+        }
+
+        function closeApp() {
+            haptic('medium');
+            tg.close();
         }
 
         function saveSettings() {
-            localStorage.setItem('empire_set', JSON.stringify({
-                lang: document.getElementById('langSelect').value,
-                vibrate: document.getElementById('vibrateCheck').checked
-            }));
+            const settings = {
+                vibrate: document.getElementById('vibrateCheck').checked,
+                lang: document.getElementById('langCheck').checked ? 'en' : 'ru'
+            };
+            localStorage.setItem('empire_web_settings', JSON.stringify(settings));
         }
 
-        updateBalanceFromUrl();
+        function toggleLang() {
+            saveSettings();
+            applyLang();
+        }
+
+        function applyLang() {
+            const isEn = document.getElementById('langCheck').checked;
+            const t = isEn ? texts.en : texts.ru;
+            
+            document.querySelector('[data-lang="vibration"]').innerText = t.vibration;
+            document.querySelector('[data-lang="language"]').innerText = t.language;
+            document.querySelector('[data-lang="exit"]').innerText = t.exit;
+            document.querySelector('[data-lang="game_title"]').innerText = t.game_title;
+            document.querySelector('[data-lang="cost"]').innerText = t.cost;
+        }
+
+        function haptic(type) {
+            if (document.getElementById('vibrateCheck').checked) {
+                tg.HapticFeedback.impactOccurred(type);
+            }
+        }
+
+        // --- ЛОГИКА ИГРЫ (SPIN) ---
+        function spin() {
+            if (isSpinning) return;
+            const isEn = document.getElementById('langCheck').checked;
+            const t = isEn ? texts.en : texts.ru;
+
+            if (currentBalance < 50) {
+                document.getElementById('msg').innerText = t.msg_no_money;
+                haptic('error');
+                return;
+            }
+
+            // Списываем ставку
+            currentBalance -= 50;
+            updateBalanceUI();
+            document.getElementById('msg').innerText = "";
+            
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            haptic('medium');
+
+            // 1. Определяем результат ЗАРАНЕЕ
+            const winIndex = Math.floor(Math.random() * items.length);
+            const winItem = items[winIndex];
+
+            // 2. Генерируем финальную ленту так, чтобы нужный элемент оказался под стрелкой
+            // Ширина карточки 100px. Центр экрана примерно на 350px/2 = 175.
+            // Нам нужно сдвинуть ленту так, чтобы конкретный элемент встал в центр.
+            // Добавим к существующей ленте еще кусок, где в конце будет наш результат.
+            
+            const tape = document.getElementById('tape');
+            // Очищаем и пересоздаем ленту для чистоты анимации
+            let newHtml = '';
+            // 20 рандомных элементов "разгона"
+            for(let i=0; i<25; i++) {
+                const r = items[Math.floor(Math.random() * items.length)];
+                newHtml += `<div class="card">${r.icon}</div>`;
+            }
+            // 26-й элемент - НАШ ВЫИГРЫШ
+            newHtml += `<div class="card" id="target-card">${winItem.icon}</div>`;
+            // Еще 4 элемента после
+            for(let i=0; i<4; i++) {
+                const r = items[Math.floor(Math.random() * items.length)];
+                newHtml += `<div class="card">${r.icon}</div>`;
+            }
+            
+            tape.innerHTML = newHtml;
+            tape.style.transition = 'none';
+            tape.style.transform = 'translateX(0)';
+
+            // Форсируем перерисовку
+            tape.offsetHeight; 
+
+            // 3. Запускаем анимацию
+            // Нам нужно сдвинуть ленту влево так, чтобы "target-card" оказался по центру.
+            // Карточка 26-я (индекс 25). 25 * 100px = 2500px.
+            // Центр контейнера (350px) = 175px. Центр карточки (100px) = 50px.
+            // Смещение: -(2500 - 175 + 50) = -2375px (примерно, подгоним математически)
+            // Упростим: сдвигаем на (25 * 100) + корректировка для центровки.
+            // Корректировка: ContainerWidth/2 - CardWidth/2 = 350/2 - 100/2 = 175 - 50 = 125px.
+            // Target Position = - (Index * 100) + 125.
+            
+            const targetPos = -(25 * 100) + 125;
+            
+            tape.style.transition = 'transform 3s cubic-bezier(0.15, 0.85, 0.35, 1.0)'; // Плавное торможение
+            tape.style.transform = `translateX(${targetPos}px)`;
+
+            // 4. Ждем окончания анимации
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+                
+                // Начисляем выигрыш
+                if (winItem.val > 0) {
+                    currentBalance += winItem.val;
+                    document.getElementById('msg').innerText = `${t.msg_win} ${winItem.val} ★`;
+                    document.getElementById('msg').style.color = "#00ff00"; // Зеленый текст
+                    haptic('success');
+                } else {
+                    document.getElementById('msg').innerText = t.msg_lose;
+                    document.getElementById('msg').style.color = "#ff4d4d"; // Красный текст
+                }
+                updateBalanceUI();
+
+            }, 3000); // Время анимации
+        }
+
+        function updateBalanceUI() {
+            document.getElementById('balance').innerText = currentBalance;
+        }
+
+        // Запуск
+        init();
     </script>
 </body>
 </html>
