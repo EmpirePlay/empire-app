@@ -6,16 +6,17 @@
     <title>Empire Play Web</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
 
         :root {
             --gold: #FFD700;
-            --gold-dim: #C5A000;
             --dark: #0f0f13;
             --card-bg: #1a1a24;
             --accent: #6C5CE7;
             --green: #00b894;
             --red: #d63031;
+            --item-width: 100px; /* Ширина предмета в кейсе */
+            --item-margin: 4px;  /* Отступ предмета */
         }
 
         body {
@@ -26,11 +27,12 @@
             padding: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            padding-bottom: 80px;
         }
 
         /* --- HEADER --- */
         .header {
-            background: linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%);
+            background: rgba(20,20,20,0.95);
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
@@ -38,6 +40,8 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 1px solid #333;
+            backdrop-filter: blur(10px);
         }
 
         .user-info {
@@ -57,6 +61,7 @@
             font-weight: bold;
             font-size: 18px;
             color: var(--dark);
+            box-shadow: 0 0 10px rgba(108, 92, 231, 0.4);
         }
 
         .user-details {
@@ -70,50 +75,63 @@
         }
 
         .balance-box {
-            background: rgba(255, 215, 0, 0.15);
+            background: rgba(255, 215, 0, 0.1);
             border: 1px solid var(--gold);
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 15px;
             color: var(--gold);
             font-weight: 900;
-            font-size: 16px;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            font-size: 15px;
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .info-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 5px;
         }
 
         /* --- TABS --- */
         .nav-tabs {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 15px 10px;
+            background: #222;
+            padding: 5px;
+            border-radius: 15px;
         }
 
         .tab-btn {
-            background: var(--card-bg);
+            flex: 1;
+            background: transparent;
             border: none;
             color: #888;
-            padding: 10px 20px;
-            border-radius: 12px;
+            padding: 10px;
+            border-radius: 10px;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
+            font-size: 13px;
         }
 
         .tab-btn.active {
-            background: var(--gold);
-            color: var(--dark);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            background: var(--card-bg);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
         /* --- GAME CONTAINER --- */
         .game-container {
-            padding: 0 20px 80px 20px; /* Padding bottom for scrolling */
+            padding: 0 15px;
             text-align: center;
             display: none;
-            animation: fadeIn 0.5s;
+            animation: fadeIn 0.4s;
         }
 
         .game-container.active {
@@ -126,10 +144,12 @@
         }
 
         h2 {
-            margin-bottom: 5px;
-            background: linear-gradient(90deg, #fff, #aaa);
+            margin: 10px 0 5px 0;
+            background: linear-gradient(90deg, #fff, #bbb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            text-transform: uppercase;
         }
 
         .subtitle {
@@ -141,43 +161,43 @@
         /* --- ROULETTE --- */
         .wheel-wrapper {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 280px;
+            height: 280px;
             margin: 0 auto 20px auto;
         }
 
         canvas {
             width: 100%;
             height: 100%;
-            transform: rotate(-90deg); /* Start at top */
-            filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.3));
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 20px rgba(108, 92, 231, 0.2));
         }
 
         .wheel-pointer {
             position: absolute;
             top: 50%;
-            right: -10px;
+            right: -12px;
             transform: translateY(-50%);
             width: 0; 
             height: 0; 
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
             border-right: 25px solid white;
             z-index: 10;
-            filter: drop-shadow(0 0 5px black);
+            filter: drop-shadow(-2px 0 2px rgba(0,0,0,0.5));
         }
 
-        /* --- CASE OPENING --- */
+        /* --- CASE OPENING FIXED --- */
         .case-box {
             width: 100%;
-            height: 150px;
+            height: 140px;
             background: #111;
             border: 2px solid var(--accent);
             border-radius: 15px;
             margin-bottom: 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
         }
 
         .case-reel {
@@ -186,26 +206,25 @@
             align-items: center;
             position: absolute;
             left: 0;
-            transition: transform 5s cubic-bezier(0.1, 0.9, 0.3, 1); /* Easing effect */
+            will-change: transform; /* Оптимизация анимации */
         }
 
         .case-item {
-            min-width: 100px;
+            width: var(--item-width);
+            min-width: var(--item-width);
             height: 100px;
-            background: var(--card-bg);
-            margin: 0 5px;
-            border-radius: 10px;
+            background: #252530;
+            margin: 0 var(--item-margin);
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-bottom: 3px solid #333;
+            border-bottom: 4px solid #333;
+            position: relative;
         }
 
-        .case-item.rare { border-bottom-color: var(--accent); box-shadow: 0 0 10px rgba(108, 92, 231, 0.2); }
-        .case-item.legendary { border-bottom-color: var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
-
-        .case-item img { width: 50px; height: 50px; margin-bottom: 5px; }
+        .case-item img { width: 45px; height: 45px; margin-bottom: 5px; }
         .case-item span { font-size: 12px; font-weight: bold; }
 
         .case-line {
@@ -216,8 +235,8 @@
             width: 4px;
             background: var(--red);
             transform: translateX(-50%);
-            z-index: 5;
-            box-shadow: 0 0 10px var(--red);
+            z-index: 20;
+            box-shadow: 0 0 15px var(--red);
         }
 
         /* --- CONTROLS --- */
@@ -225,91 +244,121 @@
             background: var(--card-bg);
             padding: 20px;
             border-radius: 20px;
-            margin-top: 20px;
+            margin-top: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .bet-input {
-            background: #111;
+            background: #0f0f13;
             border: 1px solid #333;
             color: white;
-            padding: 10px;
-            border-radius: 10px;
-            width: 60%;
+            padding: 12px;
+            border-radius: 12px;
+            width: 70%;
             text-align: center;
             font-size: 18px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             outline: none;
         }
 
         .play-btn {
-            background: linear-gradient(45deg, var(--gold), #FFA500);
+            background: linear-gradient(90deg, var(--gold), #e67e22);
             border: none;
-            color: black;
+            color: #000;
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             cursor: pointer;
             text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+            box-shadow: 0 5px 20px rgba(255, 165, 0, 0.25);
             transition: transform 0.1s;
         }
 
-        .play-btn:active { transform: scale(0.95); }
-        .play-btn:disabled { background: #444; color: #888; box-shadow: none; }
+        .play-btn:active { transform: scale(0.96); }
+        .play-btn:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; }
 
-        /* --- DROP LIST (CASE INFO) --- */
-        .drop-list {
-            margin-top: 20px;
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            background: #1a1a24;
+            padding: 25px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 400px;
+            border: 1px solid var(--accent);
             text-align: left;
-        }
-        
-        .drop-title {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            animation: zoomIn 0.3s;
+            position: relative;
         }
 
-        .drop-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        .drop-card {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
+        .modal-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 12px;
         }
 
-        .drop-icon { font-size: 20px; }
-        .drop-info { display: flex; flex-direction: column; }
-        .drop-chance { color: #555; font-size: 10px; }
+        .modal-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 20px;
+            white-space: pre-line; /* Сохраняет переносы строк */
+        }
 
-        /* --- FEED --- */
-        .live-feed {
-            margin-top: 30px;
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
+        .close-modal {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
             border-radius: 10px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
         }
-
-        .feed-item {
-            font-size: 12px;
-            padding: 5px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
+        
+        /* Save Button fixed at bottom */
+        .save-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            z-index: 90;
         }
-        .feed-win { color: var(--green); }
+        
+        .save-btn {
+            width: 100%;
+            background: #2ecc71;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+            cursor: pointer;
+        }
 
     </style>
 </head>
@@ -317,11 +366,12 @@
 
     <div class="header">
         <div class="user-info">
-            <div class="user-avatar" id="avatar">E</div>
+            <div class="user-avatar" id="avatar">?</div>
             <div class="user-details">
-                <span class="username" id="username">Загрузка...</span>
+                <span class="username" id="username">Loading...</span>
                 <span style="font-size: 10px; color: #888;">Online</span>
             </div>
+            <button class="info-btn" onclick="openModal('infoModal')">ℹ️</button>
         </div>
         <div class="balance-box">
             <span id="balance">0</span> ★
@@ -329,13 +379,13 @@
     </div>
 
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('roulette')">🎡 Рулетка</button>
-        <button class="tab-btn" onclick="switchTab('case')">📦 Кейс</button>
+        <button class="tab-btn active" onclick="switchTab('roulette', this)">🎡 Рулетка</button>
+        <button class="tab-btn" onclick="switchTab('case', this)">📦 Кейс</button>
     </div>
 
     <div id="roulette" class="game-container active">
-        <h2>ROYAL WHEEL</h2>
-        <div class="subtitle">Испытай удачу: x2, x5, x10 или зеро!</div>
+        <h2>Royal Wheel</h2>
+        <div class="subtitle">Множители от x2 до x10 или Джекпот</div>
 
         <div class="wheel-wrapper">
             <div class="wheel-pointer"></div>
@@ -344,13 +394,13 @@
 
         <div class="control-panel">
             <input type="number" id="rouletteBet" class="bet-input" value="100" placeholder="Ставка">
-            <button class="play-btn" onclick="spinWheel()">КРУТИТЬ</button>
+            <button class="play-btn" id="spinBtn" onclick="spinWheel()">КРУТИТЬ</button>
         </div>
     </div>
 
     <div id="case" class="game-container">
-        <h2>EMPIRE CASE</h2>
-        <div class="subtitle">Открой кейс и получи редкие призы</div>
+        <h2>Empire Case</h2>
+        <div class="subtitle">Гарантированный приз в каждом кейсе</div>
 
         <div class="case-box">
             <div class="case-line"></div>
@@ -359,113 +409,124 @@
         </div>
 
         <div class="control-panel">
-            <input type="number" id="caseBet" class="bet-input" value="500" readonly style="opacity: 0.7;">
-            <button class="play-btn" onclick="openCase()">ОТКРЫТЬ ЗА 500 ★</button>
+            <div style="font-size:12px; color:#888; margin-bottom:5px;">Стоимость открытия</div>
+            <input type="text" id="caseBet" class="bet-input" value="500 ★" readonly style="opacity: 0.7; border-color: var(--accent);">
+            <button class="play-btn" id="caseBtn" onclick="openCase()">ОТКРЫТЬ</button>
         </div>
+        
+        <div style="margin-top: 20px; font-size: 11px; color: #555;">
+            Выпадают предметы от 100 до 10,000 ★
+        </div>
+    </div>
+    
+    <div class="save-bar">
+        <button class="save-btn" onclick="saveAndExit()">💾 СОХРАНИТЬ И ВЫЙТИ</button>
+    </div>
 
-        <div class="drop-list">
-            <div class="drop-title">Содержимое кейса:</div>
-            <div class="drop-grid">
-                <div class="drop-card" style="border-left: 3px solid #555;">
-                    <span class="drop-icon">🪙</span>
-                    <div class="drop-info">
-                        <span>Мелочь</span>
-                        <span class="drop-chance">100 - 300 ★ (60%)</span>
-                    </div>
-                </div>
-                <div class="drop-card" style="border-left: 3px solid #6C5CE7;">
-                    <span class="drop-icon">💍</span>
-                    <div class="drop-info">
-                        <span style="color: #6C5CE7;">Редкое</span>
-                        <span class="drop-chance">600 - 900 ★ (30%)</span>
-                    </div>
-                </div>
-                <div class="drop-card" style="border-left: 3px solid var(--gold);">
-                    <span class="drop-icon">👑</span>
-                    <div class="drop-info">
-                        <span style="color: var(--gold);">Легенда</span>
-                        <span class="drop-chance">1500 - 5000 ★ (9%)</span>
-                    </div>
-                </div>
-                <div class="drop-card" style="border-left: 3px solid var(--red);">
-                    <span class="drop-icon">🚀</span>
-                    <div class="drop-info">
-                        <span style="color: var(--red);">ДЖЕКПОТ</span>
-                        <span class="drop-chance">10 000 ★ (1%)</span>
-                    </div>
-                </div>
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">🛠 EMPIRE WEB: Beta</div>
+            <div class="modal-text">
+Версия приложения: 1.0.4-beta
+
+На данный момент наше веб-приложение работает в режиме открытого бета-теста.
+
+⚡️ <b>Синхронизация баланса:</b>
+Баланс обновляется при входе. <b>Важно:</b> Чтобы сохранить выигрыш в боте, нажмите зеленую кнопку "СОХРАНИТЬ И ВЫЙТИ" внизу экрана перед закрытием!
+
+📡 <b>Стабильность:</b>
+Рекомендуется стабильный 4G или Wi-Fi. При слабом интернете возможны задержки анимации.
+
+📱 <b>Поддержка:</b>
+Оптимизировано для iOS и Android.
             </div>
+            <button class="close-modal" onclick="closeModal('infoModal')">Понятно</button>
         </div>
     </div>
 
-    <div style="padding: 20px;">
-        <h3 style="font-size: 14px; margin-bottom: 5px; color: #666;">LIVE ВЫИГРЫШИ</h3>
-        <div class="live-feed" id="feed">
-            <div class="feed-item">
-                <span>@winner123</span>
-                <span class="feed-win">+500 ★ (Case)</span>
+    <div id="welcomeModal" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <div class="modal-title" style="justify-content: center;">👋 Добро пожаловать!</div>
+            <div class="modal-text" style="text-align: center;">
+                Рады видеть вас в Empire Play Web.
+                <br><br>
+                Испытай удачу в рулетке или открывай кейсы с редкими призами. Не забудь сохранять прогресс!
             </div>
-            <div class="feed-item">
-                <span>@lucky_guy</span>
-                <span class="feed-win">+120 ★ (Wheel)</span>
-            </div>
+            <button class="close-modal" onclick="closeModal('welcomeModal')">Начать игру</button>
         </div>
     </div>
 
     <script>
-        // --- 1. INIT & DATA PARSING ---
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+        tg.expand();
 
-        // Парсинг URL для баланса (переданного ботом)
+        // --- 1. CONFIG & DATA ---
+        let currentBalance = 0;
+        
+        // Попытка получить баланс из URL
         const urlParams = new URLSearchParams(window.location.search);
-        // Если параметр есть - берем его, если нет - 0 (никаких 1000)
-        let currentBalance = parseInt(urlParams.get('balance')) || 0; 
+        const urlBalance = parseInt(urlParams.get('balance'));
+        
+        if (!isNaN(urlBalance)) {
+            currentBalance = urlBalance;
+        } else {
+            // Для теста, если открыто не через бота
+            currentBalance = 1000; 
+        }
 
-        // Инициализация пользователя
-        let user = {
-            username: "Игрок",
-            firstName: "Player"
-        };
-
+        let user = { username: "Гость", firstName: "?" };
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const u = tg.initDataUnsafe.user;
-            user.username = u.username ? `@${u.username}` : u.first_name;
-            user.firstName = u.first_name.charAt(0).toUpperCase();
+            user.username = tg.initDataUnsafe.user.username || "User";
+            user.firstName = tg.initDataUnsafe.user.first_name.charAt(0).toUpperCase();
         }
 
-        // Обновляем UI
-        document.getElementById('username').innerText = user.username;
-        document.getElementById('avatar').innerText = user.firstName;
-        updateBalanceDisplay();
+        // --- 2. INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').innerText = user.username;
+            document.getElementById('avatar').innerText = user.firstName;
+            updateUI();
+            
+            // Показываем приветствие один раз за сессию
+            if(!sessionStorage.getItem('welcomeShown')) {
+                openModal('welcomeModal');
+                sessionStorage.setItem('welcomeShown', 'true');
+            }
+            
+            initRoulette();
+            initCaseReel();
+        });
 
-        function updateBalanceDisplay() {
-            // Анимация чисел
-            document.getElementById('balance').innerText = currentBalance;
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(currentBalance);
         }
 
-        // --- 2. TABS LOGIC ---
-        function switchTab(tabId) {
+        function switchTab(tabId, btn) {
             document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            btn.classList.add('active');
         }
 
-        // --- 3. ROULETTE LOGIC ---
+        // --- 3. MODALS ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- 4. ROULETTE LOGIC ---
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        // Сектора: Цвета, Значения, Стикеры
         const segments = [
-            { color: '#4B0082', text: '0', icon: '💀', val: 0 },
-            { color: '#FFD700', text: '50', icon: '🍒', val: 50 },
-            { color: '#4B0082', text: '10', icon: '🍋', val: 10 },
-            { color: '#FFD700', text: '100', icon: '💎', val: 100 },
-            { color: '#4B0082', text: '20', icon: '🍇', val: 20 },
-            { color: '#FFD700', text: '250', icon: '🎰', val: 250 },
-            { color: '#4B0082', text: '0', icon: '💀', val: 0 },
-            { color: '#d63031', text: 'JACKPOT', icon: '👑', val: 1000 }
+            { color: '#333', text: '0', val: 0 },
+            { color: '#FFD700', text: 'x2', val: 2 },
+            { color: '#6C5CE7', text: 'x3', val: 3 },
+            { color: '#333', text: '0', val: 0 },
+            { color: '#FFD700', text: 'x5', val: 5 },
+            { color: '#333', text: '0', val: 0 },
+            { color: '#d63031', text: 'x10', val: 10 },
+            { color: '#6C5CE7', text: 'x2', val: 2 }
         ];
 
         let startAngle = 0;
@@ -475,59 +536,45 @@
         let spinTime = 0;
         let spinTimeTotal = 0;
         let isSpinning = false;
+        let currentBet = 0;
+
+        function initRoulette() {
+            drawRouletteWheel();
+        }
 
         function drawRouletteWheel() {
             ctx.clearRect(0,0,300,300);
-            
-            // Outer glow
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = "rgba(0,0,0,0.5)";
-
             for(let i = 0; i < segments.length; i++) {
                 let angle = startAngle + i * arc;
                 ctx.fillStyle = segments[i].color;
-                
                 ctx.beginPath();
                 ctx.arc(150, 150, 140, angle, angle + arc, false);
                 ctx.arc(150, 150, 0, angle + arc, angle, true);
                 ctx.fill();
-
                 ctx.save();
-                ctx.translate(150 + Math.cos(angle + arc / 2) * 110, 
-                            150 + Math.sin(angle + arc / 2) * 110);
+                ctx.translate(150 + Math.cos(angle + arc / 2) * 100, 150 + Math.sin(angle + arc / 2) * 100);
                 ctx.rotate(angle + arc / 2 + Math.PI / 2);
-                
-                // Текст (Сумма)
-                ctx.fillStyle = (segments[i].color === '#FFD700') ? '#000' : '#fff';
-                ctx.font = 'bold 16px Montserrat';
+                ctx.fillStyle = "#fff";
+                ctx.font = 'bold 18px Montserrat';
                 ctx.fillText(segments[i].text, -ctx.measureText(segments[i].text).width / 2, 0);
-                
-                // Стикер (Эмодзи)
-                ctx.font = '24px Arial';
-                ctx.fillText(segments[i].icon, -12, 30);
-                
                 ctx.restore();
             }
-            
-            // Center
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = "#fff";
-            ctx.beginPath();
-            ctx.arc(150, 150, 20, 0, 2 * Math.PI);
-            ctx.fill();
         }
 
         function spinWheel() {
             if(isSpinning) return;
-            const bet = parseInt(document.getElementById('rouletteBet').value);
+            const betInput = document.getElementById('rouletteBet');
+            currentBet = parseInt(betInput.value);
             
-            if(isNaN(bet) || bet <= 0) { tg.showAlert("Некорректная ставка"); return; }
-            if(bet > currentBalance) { tg.showAlert("Недостаточно средств!"); return; }
+            if(isNaN(currentBet) || currentBet <= 0) return tg.showAlert("Некорректная ставка");
+            if(currentBet > currentBalance) return tg.showAlert("Недостаточно средств!");
 
-            currentBalance -= bet;
-            updateBalanceDisplay();
+            currentBalance -= currentBet;
+            updateUI();
+            
             isSpinning = true;
-
+            document.getElementById('spinBtn').disabled = true;
+            
             spinAngleStart = Math.random() * 10 + 10;
             spinTime = 0;
             spinTimeTotal = Math.random() * 3000 + 4000;
@@ -548,110 +595,130 @@
 
         function stopRotateWheel() {
             isSpinning = false;
+            document.getElementById('spinBtn').disabled = false;
+            
             const degrees = startAngle * 180 / Math.PI + 90;
             const arcd = 360 / segments.length;
             const index = Math.floor((360 - degrees % 360) / arcd);
             
-            const winVal = segments[index].val;
+            const multiplier = segments[index].val;
+            const winAmount = currentBet * multiplier;
             
-            if(winVal > 0) {
-                const winAmount = parseInt(document.getElementById('rouletteBet').value) * (winVal / 50 + 1); // Простая формула
-                const finalWin = Math.floor(winAmount > 0 ? winVal : 0); // Упростим: выигрыш = числу на секторе
-                
-                // Реальная логика выигрыша
-                currentBalance += winVal;
-                updateBalanceDisplay();
-                tg.showAlert(`🎉 Выпало ${segments[index].icon}! Выигрыш: ${winVal} ★`);
-                addToFeed(user.username, winVal, "Wheel");
-            } else {
-                tg.showAlert(`💀 Пусто! Попробуйте еще раз.`);
+            if(winAmount > 0) {
+                currentBalance += winAmount;
+                tg.showAlert(`🎉 Выигрыш: ${winAmount} ★`);
             }
+            updateUI();
         }
 
-        // --- 4. CASE LOGIC ---
-        const items = [
-            { name: "Мелочь", val: 100, color: "#555", icon: "🪙" },
-            { name: "Мелочь", val: 200, color: "#555", icon: "🪙" },
-            { name: "Бонус", val: 500, color: "#555", icon: "🪙" },
-            { name: "Кольцо", val: 800, color: "#6C5CE7", icon: "💍", type: "rare" },
-            { name: "Корона", val: 2000, color: "#FFD700", icon: "👑", type: "legendary" },
-            { name: "Ракета", val: 10000, color: "#d63031", icon: "🚀", type: "legendary" },
-            // Повторы для рулетки
-            { name: "Мелочь", val: 150, color: "#555", icon: "🪙" },
-            { name: "Слиток", val: 700, color: "#6C5CE7", icon: "⚜️", type: "rare" }
+        // --- 5. CASE LOGIC (FIXED) ---
+        // Строгое определение предметов
+        const caseItems = [
+            { id: 1, val: 100, color: '#555', img: '🪙' },
+            { id: 2, val: 200, color: '#555', img: '🪙' },
+            { id: 3, val: 500, color: '#6C5CE7', img: '💍' },
+            { id: 4, val: 1000, color: '#FFD700', img: '👑' },
+            { id: 5, val: 50, color: '#555', img: '📉' },
+            { id: 6, val: 10000, color: '#d63031', img: '🚀' }
         ];
 
-        function initCase() {
+        let reelItems = []; // Здесь будет храниться сгенерированная лента
+        const ITEM_WIDTH = 100;
+        const ITEM_MARGIN = 4; // x2 (слева и справа)
+        const FULL_ITEM_WIDTH = ITEM_WIDTH + (ITEM_MARGIN * 2); 
+
+        function initCaseReel() {
             const reel = document.getElementById('caseReel');
             reel.innerHTML = '';
-            // Генерируем много предметов для прокрутки
-            for(let i=0; i<50; i++) {
-                const item = items[Math.floor(Math.random() * items.length)];
+            reelItems = [];
+            
+            // Генерируем 70 предметов для рулетки
+            for(let i=0; i<70; i++) {
+                // Выбираем случайный предмет на основе весов (тут простая рандомизация для визуала)
+                const randItem = caseItems[Math.floor(Math.random() * caseItems.length)];
+                
                 const el = document.createElement('div');
-                el.className = `case-item ${item.type || ''}`;
-                el.style.borderBottomColor = item.color;
-                el.innerHTML = `<img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dy='.3em' text-anchor='middle' font-size='80'>${item.icon}</text></svg>"><span>${item.val} ★</span>`;
+                el.className = 'case-item';
+                el.style.borderBottomColor = randItem.color;
+                
+                // SVG для иконки
+                const svgIcon = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <text x="50%" y="50%" font-size="70" text-anchor="middle" dy=".3em">${randItem.img}</text>
+                </svg>`;
+                
+                el.innerHTML = `${svgIcon}<span>${randItem.val}</span>`;
                 reel.appendChild(el);
+                
+                // Сохраняем данные в массив, чтобы потом знать, что где лежит
+                reelItems.push(randItem);
             }
         }
 
         function openCase() {
             const cost = 500;
-            if(currentBalance < cost) { tg.showAlert("Недостаточно средств (нужно 500 ★)"); return; }
-            
+            if(currentBalance < cost) return tg.showAlert("Нужно 500 ★");
+            if(document.getElementById('caseBtn').disabled) return;
+
             currentBalance -= cost;
-            updateBalanceDisplay();
-
-            const reel = document.getElementById('caseReel');
-            const randomOffset = Math.floor(Math.random() * 2000) + 3500; // Random position
+            updateUI();
             
-            reel.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)";
-            reel.style.transform = `translateX(-${randomOffset}px)`;
+            const btn = document.getElementById('caseBtn');
+            btn.disabled = true;
 
+            // 1. ОПРЕДЕЛЯЕМ ПОБЕДИТЕЛЯ ЗАРАНЕЕ
+            // Выбираем индекс победителя где-то в конце ленты (между 50 и 60 элементом), чтобы крутилось долго
+            const winIndex = Math.floor(Math.random() * 10) + 50; 
+            const winningItemData = reelItems[winIndex];
+
+            // 2. РАСЧЕТ СМЕЩЕНИЯ (МАТЕМАТИКА)
+            const reel = document.getElementById('caseReel');
+            const containerWidth = document.querySelector('.case-box').offsetWidth;
+            
+            // Нам нужно, чтобы центр winIndex элемента совпал с центром контейнера (containerWidth / 2)
+            // Позиция центра элемента = (winIndex * FULL_ITEM_WIDTH) + (FULL_ITEM_WIDTH / 2)
+            // Добавим немного рандома внутри самого предмета (+/- 20px), чтобы не всегда ровно по центру
+            const randomOffset = Math.floor(Math.random() * 40) - 20;
+            
+            const positionToScroll = (winIndex * FULL_ITEM_WIDTH) + (FULL_ITEM_WIDTH / 2) - (containerWidth / 2) + randomOffset;
+            
+            // 3. ЗАПУСК АНИМАЦИИ
+            reel.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.3, 1)"; // Эффект замедления
+            reel.style.transform = `translateX(-${positionToScroll}px)`;
+
+            // 4. ВЫДАЧА ПРИЗА ПОСЛЕ ОКОНЧАНИЯ
             setTimeout(() => {
-                // Рассчитываем выигрыш (симуляция)
-                const win = Math.random() > 0.8 ? (Math.random() > 0.9 ? 2000 : 800) : 200;
-                currentBalance += win;
-                updateBalanceDisplay();
-                tg.showAlert(`📦 Из кейса выпало: ${win} ★`);
-                addToFeed(user.username, win, "Case");
+                currentBalance += winningItemData.val;
+                updateUI();
+                tg.showAlert(`📦 Выпало: ${winningItemData.val} ★`);
                 
-                // Reset visual
+                btn.disabled = false;
+                
+                // (Опционально) Сброс рулетки через пару секунд без анимации
                 setTimeout(() => {
                     reel.style.transition = "none";
-                    reel.style.transform = "translateX(0)";
+                    reel.style.transform = "translateX(0px)";
                 }, 2000);
-            }, 5000);
+                
+            }, 4000); // Таймер должен совпадать с transition (4s)
         }
 
         // --- UTILS ---
         function easeOut(t, b, c, d) {
-            t /= d;
-            t--;
+            t /= d; t--;
             return c * (t*t*t + 1) + b;
         }
 
-        function addToFeed(name, amount, game) {
-            const feed = document.getElementById('feed');
-            const div = document.createElement('div');
-            div.className = 'feed-item';
-            div.innerHTML = `<span>${name}</span><span class="feed-win">+${amount} ★ (${game})</span>`;
-            feed.insertBefore(div, feed.firstChild);
-            if(feed.children.length > 4) feed.removeChild(feed.lastChild);
+        // --- SYNC LOGIC ---
+        function saveAndExit() {
+            // Отправляем данные обратно боту
+            const data = JSON.stringify({
+                action: 'save_balance',
+                user_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0,
+                new_balance: currentBalance
+            });
+            
+            tg.sendData(data); // Это закроет веб-апп и отправит данные боту
         }
-
-        // Fake activity
-        setInterval(() => {
-            const bots = ["@alex_k", "@winner777", "@crypto_king", "@lucky_girl", "@empire_fan"];
-            const games = ["Wheel", "Case"];
-            const rBot = bots[Math.floor(Math.random() * bots.length)];
-            const rWin = Math.floor(Math.random() * 500) + 50;
-            addToFeed(rBot, rWin, games[Math.floor(Math.random() * games.length)]);
-        }, 5000);
-
-        // Initial draw
-        drawRouletteWheel();
-        initCase();
 
     </script>
 </body>
