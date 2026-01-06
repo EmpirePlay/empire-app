@@ -2,336 +2,179 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Empire Web App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire Slots</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --panel-color: #2b2b2b;
-            --gold: #FFD700;
-            --text-main: #ffffff;
-            --danger: #ff4d4d;
+        body { 
+            background: #121212; color: #fff; font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; height: 100vh; margin: 0; overflow: hidden; 
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            display: flex; flex-direction: column;
-        }
-
-        /* --- ШАПКА --- */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px;
-            background-color: var(--panel-color);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            z-index: 20;
-        }
-        .menu-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: white; }
-        .balance-box { font-size: 18px; font-weight: bold; color: var(--gold); border: 1px solid var(--gold); padding: 5px 15px; border-radius: 20px; background: rgba(0,0,0,0.4); }
-
-        /* --- МЕНЮ (SIDEBAR) --- */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 90;
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .overlay.active { opacity: 1; pointer-events: all; }
-
-        .sidebar {
-            position: fixed; top: 0; left: 0; height: 100%; width: 260px;
-            background: #252525; z-index: 100;
-            transform: translateX(-100%); transition: transform 0.3s ease;
-            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-            box-shadow: 2px 0 20px rgba(0,0,0,0.5);
-        }
-        .sidebar.active { transform: translateX(0); }
-
-        .user-info { text-align: center; margin-bottom: 30px; border-bottom: 1px solid #444; padding-bottom: 20px; }
-        .user-avatar { font-size: 40px; margin-bottom: 10px; display: block; }
-        .user-name { font-size: 1.1rem; font-weight: bold; display: block; color: var(--gold); }
-        .user-id { font-size: 0.85rem; color: #aaa; margin-top: 5px; display: block; }
-
-        .menu-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-exit { margin-top: auto; background: var(--danger); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
-
-        /* Переключатель */
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--gold); }
-        input:checked + .slider:before { transform: translateX(18px); }
-
-        /* --- ИГРА --- */
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; }
+        .user-info { margin-bottom: 10px; text-align: center; }
+        #username { color: #d4af37; font-weight: bold; }
+        #balance-display { font-size: 1.5rem; margin: 10px 0; color: #f1c40f; }
         
-        h2 { color: var(--gold); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-
-        .roulette-container {
-            width: 300px; /* Фиксированная ширина окна */
-            height: 100px;
-            background: #111;
-            border: 2px solid var(--gold);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 20px;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+        .slot-machine { 
+            background: linear-gradient(145deg, #1e1e1e, #111); 
+            border: 4px solid #d4af37; border-radius: 20px; 
+            padding: 20px; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); 
         }
-
-        .pointer {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 4px; height: 100%; background: red; z-index: 10;
-            box-shadow: 0 0 5px red;
+        .reels { display: flex; gap: 10px; margin-bottom: 20px; }
+        .reel { 
+            width: 80px; height: 100px; background: #000; 
+            border: 2px solid #333; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 3rem; overflow: hidden; position: relative; 
         }
-
-        .tape {
-            display: flex;
-            height: 100%;
-            align-items: center;
-            /* Начальная позиция будет задана в JS */
-            will-change: transform;
+        
+        .controls { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .btn { 
+            background: linear-gradient(45deg, #d4af37, #f1c40f); 
+            border: none; padding: 12px 30px; color: #000; 
+            font-weight: bold; border-radius: 50px; cursor: pointer; 
+            font-size: 1.1rem; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4); 
         }
-
-        .card {
-            width: 80px; /* Фиксированная ширина карточки */
-            height: 80px;
-            flex-shrink: 0; /* ВАЖНО: Не сжимать карточки! */
-            display: flex; justify-content: center; align-items: center;
-            font-size: 40px;
-            border-right: 1px solid #333;
-            box-sizing: border-box;
-        }
-
-        .spin-btn {
-            background: var(--gold); color: #000; border: none; padding: 15px 50px;
-            font-size: 1.2rem; font-weight: bold; border-radius: 30px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3); transition: transform 0.1s;
-        }
-        .spin-btn:active { transform: scale(0.95); }
-        .spin-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
-
-        .status-msg { height: 20px; margin-top: 15px; font-weight: bold; color: var(--gold); }
-
-        /* Таблица выплат */
-        .paytable {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-            margin-top: 30px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;
-        }
-        .pay-item { text-align: center; }
-        .pay-val { font-size: 0.75rem; color: #aaa; margin-top: 2px; }
-
+        .btn-exit { background: #333; color: #fff; font-size: 0.9rem; margin-top: 15px; }
+        .btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; }
+        
+        .status { margin-top: 15px; font-size: 1.1rem; color: #f1c40f; height: 1.5rem; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="overlay" onclick="toggleMenu()"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="user-info">
-            <span class="user-avatar">😎</span>
-            <span class="user-name" id="username">Загрузка...</span>
-            <span class="user-id" id="userid">ID: ...</span>
-        </div>
-        
-        <div class="menu-item">
-            <span>Вибрация</span>
-            <label class="switch"><input type="checkbox" id="vibrateCheck" checked><span class="slider"></span></label>
-        </div>
-        <div class="menu-item">
-            <span>Язык (RU/EN)</span>
-            <label class="switch"><input type="checkbox" id="langCheck"><span class="slider"></span></label>
-        </div>
-
-        <button class="btn-exit" onclick="tg.close()">Выход с веба</button>
+    <div class="user-info">
+        <div id="username">Загрузка...</div>
+        <div id="balance-display"><span id="balance-val">0</span> ★</div>
     </div>
 
-    <header>
-        <button class="menu-btn" onclick="toggleMenu()">☰</button>
-        <div class="balance-box"><span id="balance">0</span> ★</div>
-    </header>
+    <h2 style="color: #d4af37; letter-spacing: 2px; margin: 5px 0;">EMPIRE SLOTS</h2>
 
-    <main>
-        <h2>ROULETTE</h2>
-        
-        <div class="roulette-container">
-            <div class="pointer"></div>
-            <div class="tape" id="tape">
-                </div>
+    <div class="slot-machine">
+        <div class="reels">
+            <div id="reel1" class="reel">💎</div>
+            <div id="reel2" class="reel">💎</div>
+            <div id="reel3" class="reel">💎</div>
         </div>
+        <div class="controls">
+            <button id="spin-btn" class="btn" onclick="spin()">КРУТИТЬ (5 ★)</button>
+        </div>
+    </div>
 
-        <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN (50★)</button>
-        <div class="status-msg" id="status">Удачи!</div>
+    <div id="status" class="status"></div>
 
-        <div class="paytable" id="paytable"></div>
-    </main>
+    <button class="btn btn-exit" onclick="closeApp()">ВЫХОД ИЗ ПРИЛОЖЕНИЯ</button>
 
     <script>
-        const tg = window.Telegram.WebApp;
+        let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Данные: Иконка и Выигрыш
-        const items = [
-            { icon: '💩', val: 0 },
-            { icon: '🍋', val: 10 },
-            { icon: '🍒', val: 25 },
-            { icon: '🍉', val: 50 },  // Возврат
-            { icon: '🔔', val: 75 },
-            { icon: '🎲', val: 100 }, // x2
-            { icon: '🎰', val: 150 }, // x3
-            { icon: '💎', val: 250 }, // x5
-            { icon: '👑', val: 500 }, // x10
-            { icon: '🔥', val: 1000 } // Jackpot
+        // 1. Работа с балансом и пользователем
+        const urlParams = new URLSearchParams(window.location.search);
+        let balance = parseInt(urlParams.get('balance')) || 0;
+        const spinCost = 5;
+
+        // Отображение ника
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('username').innerText = user ? (user.username ? "@" + user.username : user.first_name) : "Игрок";
+        updateBalanceUI();
+
+        // 2. Настройка символов и шансов (Веса)
+        // Чем чаще символ в массиве, тем выше шанс его выпадения
+        const weightedSymbols = [
+            '🍒', '🍒', '🍒', '🍒', '🍒', // Очень часто
+            '🌟', '🌟', '🌟', '🌟',       // Часто
+            '🔥', '🔥', '🔥',             // Средне
+            '💎', '💎',                   // Редко
+            '👑',                         // Очень редко
+            '🎰'                          // Джекпот (1/16 на один рил)
         ];
 
-        let balance = 0;
-        let isSpinning = false;
-        const CARD_WIDTH = 80; // Ширина одной картинки (как в CSS)
-        const CONTAINER_WIDTH = 300; // Ширина окна рулетки (как в CSS)
+        const reels = [
+            document.getElementById('reel1'),
+            document.getElementById('reel2'),
+            document.getElementById('reel3')
+        ];
+        const statusText = document.getElementById('status');
+        const spinBtn = document.getElementById('spin-btn');
 
-        // Инициализация
-        window.onload = function() {
-            // 1. Загрузка данных пользователя
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const user = tg.initDataUnsafe.user;
-                document.getElementById('username').innerText = user.first_name;
-                document.getElementById('userid').innerText = 'ID: ' + user.id;
-            } else {
-                document.getElementById('username').innerText = "Гость";
-                document.getElementById('userid').innerText = "ID: Неизвестен";
-            }
-
-            // 2. Баланс из URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const balParam = urlParams.get('balance');
-            if(balParam) balance = parseInt(balParam);
-            updateBalance();
-
-            // 3. Рисуем таблицу выплат
-            const pt = document.getElementById('paytable');
-            items.forEach(i => {
-                pt.innerHTML += `<div class="pay-item"><div>${i.icon}</div><div class="pay-val">${i.val}</div></div>`;
-            });
-
-            // 4. Генерируем стартовую ленту (просто для вида)
-            generateTape(false);
-        };
-
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.querySelector('.overlay').classList.toggle('active');
-        }
-
-        function updateBalance() {
-            document.getElementById('balance').innerText = balance;
-        }
-
-        // Генерация ленты. 
-        // winItem - объект выигрыша (если null, то просто рандом)
-        function generateTape(winItem) {
-            const tape = document.getElementById('tape');
-            let html = '';
-            
-            // Если мы просто инициализируем (не крутим), создаем короткую ленту
-            if (!winItem) {
-                for(let i=0; i<10; i++) {
-                    const r = items[Math.floor(Math.random() * items.length)];
-                    html += `<div class="card">${r.icon}</div>`;
-                }
-                tape.innerHTML = html;
-                tape.style.transform = 'translateX(0px)';
-                return;
-            }
-
-            // ЕСЛИ КРУТИМ:
-            // 1. Генерируем 30 случайных карт до выигрыша
-            for(let i=0; i<30; i++) {
-                const r = items[Math.floor(Math.random() * items.length)];
-                html += `<div class="card">${r.icon}</div>`;
-            }
-            // 2. Вставляем ВЫИГРЫШНУЮ карту (31-я по счету, индекс 30)
-            html += `<div class="card" id="winner-card">${winItem.icon}</div>`;
-            // 3. Генерируем еще 5 карт после
-            for(let i=0; i<5; i++) {
-                const r = items[Math.floor(Math.random() * items.length)];
-                html += `<div class="card">${r.icon}</div>`;
-            }
-            
-            tape.innerHTML = html;
+        function updateBalanceUI() {
+            document.getElementById('balance-val').innerText = balance;
         }
 
         function spin() {
-            if(isSpinning) return;
-            if(balance < 50) {
-                document.getElementById('status').innerText = "Недостаточно средств!";
-                if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.notificationOccurred('error');
+            if (balance < spinCost) {
+                statusText.innerText = "Недостаточно ★ на балансе!";
                 return;
             }
 
-            // Списываем ставку
-            balance -= 50;
-            updateBalance();
+            balance -= spinCost;
+            updateBalanceUI();
             
-            isSpinning = true;
-            document.getElementById('spinBtn').disabled = true;
-            document.getElementById('status').innerText = "Крутим...";
-
-            // 1. Выбираем победителя заранее
-            const winItem = items[Math.floor(Math.random() * items.length)];
-
-            // 2. Генерируем ленту с этим победителем
-            generateTape(winItem);
-
-            const tape = document.getElementById('tape');
-
-            // 3. СБРОС (ВАЖНО!): Ставим ленту в начало мгновенно
-            tape.style.transition = 'none';
-            tape.style.transform = 'translateX(0px)';
+            spinBtn.disabled = true;
+            statusText.innerText = "Ставки сделаны...";
             
-            // 4. FORCED REFLOW (Магия, чтобы браузер понял, что мы в начале)
-            tape.offsetHeight; 
-
-            // 5. Вычисляем координаты центра
-            // Нам нужно, чтобы 31-я карта (индекс 30) встала по центру контейнера.
-            // Позиция карты = 30 * 80px = 2400px.
-            // Центр контейнера = 300 / 2 = 150px.
-            // Центр карты = 80 / 2 = 40px.
-            // Смещение = - (ПозицияКарты) + (ЦентрКонтейнера - ЦентрКарты)
-            // Смещение = -2400 + (150 - 40) = -2400 + 110 = -2290px.
+            let spins = 0;
+            const maxSpins = 15;
             
-            const targetIndex = 30; // Это 31-й элемент
-            const centerOffset = (CONTAINER_WIDTH / 2) - (CARD_WIDTH / 2); // 150 - 40 = 110
-            const targetPos = - (targetIndex * CARD_WIDTH) + centerOffset;
+            const interval = setInterval(() => {
+                reels.forEach(reel => {
+                    const randomSymbol = weightedSymbols[Math.floor(Math.random() * weightedSymbols.length)];
+                    reel.innerText = randomSymbol;
+                });
+                spins++;
 
-            // 6. Запускаем анимацию
-            tape.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.2, 1)'; // Эффект замедления
-            tape.style.transform = `translateX(${targetPos}px)`;
-            
-            // Вибрация при старте
-            if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.impactOccurred('medium');
-
-            // 7. Окончание анимации
-            setTimeout(() => {
-                isSpinning = false;
-                document.getElementById('spinBtn').disabled = false;
-
-                if(winItem.val > 0) {
-                    balance += winItem.val;
-                    document.getElementById('status').innerText = `ВЫИГРЫШ: ${winItem.val} ★`;
-                    document.getElementById('status').style.color = "#0f0";
-                    if(document.getElementById('vibrateCheck').checked) tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    document.getElementById('status').innerText = "Пусто...";
-                    document.getElementById('status').style.color = "#aaa";
+                if (spins >= maxSpins) {
+                    clearInterval(interval);
+                    checkWin();
                 }
-                updateBalance();
+            }, 100);
+        }
 
-            }, 3000); // Должно совпадать со временем transition (3s)
+        function checkWin() {
+            const res = reels.map(reel => reel.innerText);
+            spinBtn.disabled = false;
+            let winAmount = 0;
+
+            // Логика выигрыша
+            if (res[0] === res[1] && res[1] === res[2]) {
+                // Три в ряд
+                const symbol = res[0];
+                if (symbol === '🎰') winAmount = 100;
+                else if (symbol === '👑') winAmount = 50;
+                else if (symbol === '💎') winAmount = 25;
+                else winAmount = 15;
+
+                statusText.innerText = `🎉 ВЫИГРЫШ: ${winAmount} ★!`;
+                tg.HapticFeedback.notificationOccurred('success');
+            } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+                // Две совпали
+                winAmount = 7;
+                statusText.innerText = "💰 Малый приз: 7 ★";
+                tg.HapticFeedback.impactOccurred('medium');
+            } else {
+                statusText.innerText = "Попробуйте еще раз";
+            }
+
+            balance += winAmount;
+            updateBalanceUI();
+            syncBalance(); // Отправляем данные боту при каждом изменении
+        }
+
+        function syncBalance() {
+            // Отправка данных боту без закрытия (если бот поддерживает)
+            // Использование sendData закрывает WebApp, поэтому просто готовим данные
+            const data = JSON.stringify({
+                action: "update_balance",
+                balance: balance
+            });
+            tg.sendData(data); 
+        }
+
+        function closeApp() {
+            // При нажатии Выход - отправляем финальный баланс и закрываем
+            syncBalance();
+            tg.close();
         }
     </script>
 </body>
