@@ -3,721 +3,902 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Empire Play Web</title>
+    <title>Empire Play | Telegram Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
-
+        /* =========================================
+           1. CORE VARIABLES & RESET
+           ========================================= */
         :root {
-            --gold: #FFD700;
-            --dark: #0f0f13;
-            --card-bg: #1a1a24;
-            --accent: #6C5CE7;
-            --green: #00b894;
-            --red: #d63031;
-            --item-width: 100px; /* Ширина предмета в кейсе */
-            --item-margin: 4px;  /* Отступ предмета */
+            --bg-deep: #050505;
+            --primary: #FF8C00; /* Vivid Orange */
+            --primary-glow: rgba(255, 140, 0, 0.5);
+            --glass-bg: rgba(20, 20, 20, 0.6);
+            --glass-border: rgba(255, 140, 0, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --font-stack: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --cubic-bezier: cubic-bezier(0.15, 0, 0.15, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--dark);
-            color: white;
-            font-family: 'Montserrat', sans-serif;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 80px;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            overflow: hidden; /* Prevent body scroll, handle inside app */
+            height: 100vh;
+            width: 100vw;
         }
 
-        /* --- HEADER --- */
-        .header {
-            background: rgba(20,20,20,0.95);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #333;
-            backdrop-filter: blur(10px);
+        /* Background Effects */
+        .ambient-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vw;
+            height: 120vw;
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.08) 0%, rgba(5, 5, 5, 0) 70%);
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseGlow 8s infinite alternate;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        @keyframes pulseGlow {
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(45deg, var(--gold), var(--accent));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: var(--dark);
-            box-shadow: 0 0 10px rgba(108, 92, 231, 0.4);
+        /* =========================================
+           2. UI COMPONENTS (GLASSMORPHISM)
+           ========================================= */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .user-details {
+        .btn-empire {
+            background: linear-gradient(135deg, #FF8C00 0%, #D65A00 100%);
+            border: none;
+            color: white;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-empire:active {
+            transform: scale(0.96);
+        }
+
+        /* =========================================
+           3. LAYOUT STRUCTURE
+           ========================================= */
+        #app {
             display: flex;
             flex-direction: column;
+            height: 100%;
+            padding-top: 60px; /* Header height */
+            padding-bottom: 80px; /* Nav height */
+            position: relative;
         }
 
-        .username {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .balance-box {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--gold);
-            padding: 6px 12px;
-            border-radius: 15px;
-            color: var(--gold);
-            font-weight: 900;
-            font-size: 15px;
+        /* HEADER */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
             display: flex;
             align-items: center;
-            gap: 5px;
-        }
-
-        .info-btn {
-            background: transparent;
-            border: none;
-            color: #888;
-            font-size: 20px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        /* --- TABS --- */
-        .nav-tabs {
-            display: flex;
             justify-content: center;
-            gap: 10px;
-            margin: 15px 10px;
-            background: #222;
-            padding: 5px;
-            border-radius: 15px;
+            z-index: 100;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 140, 0, 0.1);
         }
 
-        .tab-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #888;
-            padding: 10px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 13px;
+        .brand-text {
+            font-size: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, #FF8C00, #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
         }
 
-        .tab-btn.active {
-            background: var(--card-bg);
-            color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        @keyframes shine {
+            to { background-position: 200% center; }
         }
 
-        /* --- GAME CONTAINER --- */
-        .game-container {
-            padding: 0 15px;
-            text-align: center;
+        /* VIEWS */
+        .view {
             display: none;
-            animation: fadeIn 0.4s;
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeInView 0.4s ease;
         }
 
-        .game-container.active {
+        .view.active {
             display: block;
         }
 
-        @keyframes fadeIn {
+        @keyframes fadeInView {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h2 {
-            margin: 10px 0 5px 0;
-            background: linear-gradient(90deg, #fff, #bbb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        /* --- ROULETTE --- */
-        .wheel-wrapper {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            margin: 0 auto 20px auto;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-            filter: drop-shadow(0 0 20px rgba(108, 92, 231, 0.2));
-        }
-
-        .wheel-pointer {
-            position: absolute;
-            top: 50%;
-            right: -12px;
-            transform: translateY(-50%);
-            width: 0; 
-            height: 0; 
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            border-right: 25px solid white;
-            z-index: 10;
-            filter: drop-shadow(-2px 0 2px rgba(0,0,0,0.5));
-        }
-
-        /* --- CASE OPENING FIXED --- */
-        .case-box {
-            width: 100%;
-            height: 140px;
-            background: #111;
-            border: 2px solid var(--accent);
-            border-radius: 15px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
-        }
-
-        .case-reel {
-            display: flex;
-            height: 100%;
-            align-items: center;
-            position: absolute;
+        /* BOTTOM NAV */
+        nav {
+            position: fixed;
+            bottom: 0;
             left: 0;
-            will-change: transform; /* Оптимизация анимации */
+            width: 100%;
+            height: 70px;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 140, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: 10px; /* Safe area */
         }
 
-        .case-item {
-            width: var(--item-width);
-            min-width: var(--item-width);
-            height: 100px;
-            background: #252530;
-            margin: 0 var(--item-margin);
-            border-radius: 8px;
+        .nav-item {
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border-bottom: 4px solid #333;
-            position: relative;
+            gap: 5px;
+            transition: all 0.3s ease;
+            width: 60px;
+            cursor: pointer;
         }
 
-        .case-item img { width: 45px; height: 45px; margin-bottom: 5px; }
-        .case-item span { font-size: 12px; font-weight: bold; }
+        .nav-icon {
+            font-size: 24px;
+            transition: transform 0.3s;
+        }
 
-        .case-line {
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active .nav-icon {
+            transform: translateY(-5px) scale(1.1);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .nav-indicator {
+            width: 20px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+            opacity: 0;
+            box-shadow: 0 0 10px var(--primary);
+            transition: opacity 0.3s;
+        }
+
+        .nav-item.active .nav-indicator {
+            opacity: 1;
+        }
+
+        /* =========================================
+           4. WELCOME MODAL
+           ========================================= */
+        #welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            animation: modalFadeIn 0.8s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+
+        .modal-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        /* =========================================
+           5. PROFILE TAB
+           ========================================= */
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .user-info h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-id {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .vip-progress {
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 40%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .vip-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* =========================================
+           6. REFERRAL TAB
+           ========================================= */
+        .ref-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .ref-header h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .ref-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .ref-link-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .ref-input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--primary);
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .btn-copy {
+            background: #222;
+            border: 1px solid var(--glass-border);
+            color: white;
+            border-radius: 8px;
+            padding: 0 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .referral-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ref-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .active-dot { background: #00FF00; box-shadow: 0 0 8px #00FF00; }
+        .offline-dot { background: #555; }
+
+        /* =========================================
+           7. ROULETTE (CS:GO STYLE)
+           ========================================= */
+        .roulette-container {
+            position: relative;
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .roulette-window {
+            width: 100%;
+            height: 100px; /* Increased height */
+            background: rgba(0,0,0,0.5);
+            border-top: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            /* Inner shadow for depth */
+            box-shadow: inset 0 0 20px #000; 
+        }
+
+        .pointer {
             position: absolute;
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 4px;
-            background: var(--red);
+            width: 2px;
+            background: #FF0000;
+            z-index: 10;
             transform: translateX(-50%);
-            z-index: 20;
-            box-shadow: 0 0 15px var(--red);
+            box-shadow: 0 0 10px #FF0000;
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -6px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #FF0000;
         }
 
-        /* --- CONTROLS --- */
-        .control-panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 20px;
-            margin-top: 15px;
-            border: 1px solid rgba(255,255,255,0.05);
+        .roulette-track {
+            display: flex;
+            height: 80px;
+            will-change: transform; /* Hint for browser optimization */
+            /* Initial transform handled by JS */
         }
 
-        .bet-input {
-            background: #0f0f13;
-            border: 1px solid #333;
-            color: white;
-            padding: 12px;
-            border-radius: 12px;
-            width: 70%;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            outline: none;
-        }
-
-        .play-btn {
-            background: linear-gradient(90deg, var(--gold), #e67e22);
-            border: none;
-            color: #000;
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 900;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 5px 20px rgba(255, 165, 0, 0.25);
-            transition: transform 0.1s;
-        }
-
-        .play-btn:active { transform: scale(0.96); }
-        .play-btn:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; }
-
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            display: none;
+        .item-card {
+            width: 80px; /* Fixed width per item */
+            height: 80px;
+            flex-shrink: 0;
+            display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-box {
-            background: #1a1a24;
-            padding: 25px;
-            border-radius: 20px;
-            width: 85%;
-            max-width: 400px;
-            border: 1px solid var(--accent);
-            text-align: left;
-            animation: zoomIn 0.3s;
+            font-size: 32px; /* Emoji size */
+            border-right: 1px solid rgba(255,255,255,0.05);
             position: relative;
         }
 
-        @keyframes zoomIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .item-card::after {
+            content: attr(data-val);
+            position: absolute;
+            bottom: 5px;
+            font-size: 10px;
+            color: #aaa;
+            font-weight: bold;
         }
 
-        .modal-title {
-            font-size: 18px;
-            font-weight: 900;
-            color: white;
-            margin-bottom: 15px;
+        .item-rare { background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent); }
+        .item-mythic { background: radial-gradient(circle, rgba(148, 0, 211, 0.2), transparent); }
+        
+        .recent-wins {
             display: flex;
-            align-items: center;
             gap: 10px;
-        }
-
-        .modal-text {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #ccc;
-            margin-bottom: 20px;
-            white-space: pre-line; /* Сохраняет переносы строк */
-        }
-
-        .close-modal {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-top: 20px;
         }
         
-        /* Save Button fixed at bottom */
-        .save-bar {
+        .win-badge {
+            background: rgba(255,255,255,0.05);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            z-index: 90;
-        }
-        
-        .save-btn {
-            width: 100%;
-            background: #2ecc71;
-            color: white;
-            font-weight: bold;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
-            cursor: pointer;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
         }
 
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="user-info">
-            <div class="user-avatar" id="avatar">?</div>
-            <div class="user-details">
-                <span class="username" id="username">Loading...</span>
-                <span style="font-size: 10px; color: #888;">Online</span>
-            </div>
-            <button class="info-btn" onclick="openModal('infoModal')">ℹ️</button>
-        </div>
-        <div class="balance-box">
-            <span id="balance">0</span> ★
-        </div>
+    <div class="ambient-glow"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="welcome-modal">
+        <h1 class="modal-title"><span style="color:var(--primary)">EMPIRE</span> PLAY</h1>
+        <p class="modal-desc">
+            Добро пожаловать в высшую лигу.<br>
+            Здесь алгоритмы честны, а выигрыши легендарны.<br>
+            Твоя империя начинается с первого клика.
+        </p>
+        <button class="btn-empire" onclick="closeModal()">ВОЙТИ В ИМПЕРИЮ</button>
     </div>
 
-    <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('roulette', this)">🎡 Рулетка</button>
-        <button class="tab-btn" onclick="switchTab('case', this)">📦 Кейс</button>
-    </div>
+    <header>
+        <div class="brand-text">EMPIRE PLAY</div>
+    </header>
 
-    <div id="roulette" class="game-container active">
-        <h2>Royal Wheel</h2>
-        <div class="subtitle">Множители от x2 до x10 или Джекпот</div>
-
-        <div class="wheel-wrapper">
-            <div class="wheel-pointer"></div>
-            <canvas id="wheelCanvas" width="300" height="300"></canvas>
-        </div>
-
-        <div class="control-panel">
-            <input type="number" id="rouletteBet" class="bet-input" value="100" placeholder="Ставка">
-            <button class="play-btn" id="spinBtn" onclick="spinWheel()">КРУТИТЬ</button>
-        </div>
-    </div>
-
-    <div id="case" class="game-container">
-        <h2>Empire Case</h2>
-        <div class="subtitle">Гарантированный приз в каждом кейсе</div>
-
-        <div class="case-box">
-            <div class="case-line"></div>
-            <div class="case-reel" id="caseReel">
-                </div>
-        </div>
-
-        <div class="control-panel">
-            <div style="font-size:12px; color:#888; margin-bottom:5px;">Стоимость открытия</div>
-            <input type="text" id="caseBet" class="bet-input" value="500 ★" readonly style="opacity: 0.7; border-color: var(--accent);">
-            <button class="play-btn" id="caseBtn" onclick="openCase()">ОТКРЫТЬ</button>
-        </div>
+    <div id="app">
         
-        <div style="margin-top: 20px; font-size: 11px; color: #555;">
-            Выпадают предметы от 100 до 10,000 ★
-        </div>
-    </div>
-    
-    <div class="save-bar">
-        <button class="save-btn" onclick="saveAndExit()">💾 СОХРАНИТЬ И ВЫЙТИ</button>
-    </div>
-
-    <div id="infoModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">🛠 EMPIRE WEB: Beta</div>
-            <div class="modal-text">
-Версия приложения: 1.0.4-beta
-
-На данный момент наше веб-приложение работает в режиме открытого бета-теста.
-
-⚡️ <b>Синхронизация баланса:</b>
-Баланс обновляется при входе. <b>Важно:</b> Чтобы сохранить выигрыш в боте, нажмите зеленую кнопку "СОХРАНИТЬ И ВЫЙТИ" внизу экрана перед закрытием!
-
-📡 <b>Стабильность:</b>
-Рекомендуется стабильный 4G или Wi-Fi. При слабом интернете возможны задержки анимации.
-
-📱 <b>Поддержка:</b>
-Оптимизировано для iOS и Android.
+        <div id="view-profile" class="view active">
+            <div class="glass-panel profile-card">
+                <div class="avatar">👑</div>
+                <div class="user-info">
+                    <h2>Empire_King</h2>
+                    <div class="user-id">UID: 8339414473</div>
+                </div>
             </div>
-            <button class="close-modal" onclick="closeModal('infoModal')">Понятно</button>
+
+            <div class="stats-grid">
+                <div class="glass-panel stat-box">
+                    <div class="stat-value" id="balance-display">⭐ 1,250</div>
+                    <div class="stat-label">Баланс</div>
+                </div>
+                <div class="glass-panel stat-box">
+                    <div class="stat-value">142</div>
+                    <div class="stat-label">Триумфов</div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="padding: 20px;">
+                <div class="vip-header">
+                    <span>VIP LEVEL 4</span>
+                    <span>10 MAX</span>
+                </div>
+                <div class="vip-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: #666; margin-top: 10px;">
+                    Следующий уровень откроет доступ к Закрытым Турнирам.
+                </p>
+            </div>
         </div>
+
+        <div id="view-referrals" class="view">
+            <div class="ref-header">
+                <h2>Амбассадор Империи</h2>
+                <p>Твой капитал растет вместе с твоей командой. Получай пожизненные 5% от каждой триумфальной победы твоих рефералов. Это не просто игра — это бизнес.</p>
+            </div>
+
+            <div class="ref-link-box">
+                <input type="text" class="ref-input" value="t.me/empireplay?start=83394" readonly>
+                <button class="btn-copy" onclick="copyLink(this)">COPY</button>
+            </div>
+
+            <h3 style="font-size: 14px; text-transform:uppercase; color: #666; margin-bottom: 10px;">Твоя Сеть</h3>
+            <div class="referral-list">
+                <div class="glass-panel ref-item">
+                    <span>@crypto_shark</span>
+                    <span style="font-size: 12px; color: #888;"><span class="status-dot active-dot"></span>Active</span>
+                </div>
+                <div class="glass-panel ref-item">
+                    <span>@lucky_luke</span>
+                    <span style="font-size: 12px; color: #888;"><span class="status-dot active-dot"></span>Active</span>
+                </div>
+                <div class="glass-panel ref-item">
+                    <span>@inactive_user</span>
+                    <span style="font-size: 12px; color: #888;"><span class="status-dot offline-dot"></span>Offline</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-roulette" class="view">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: #888; letter-spacing: 2px;">ТЕКУЩИЙ БАЛАНС</div>
+                <div id="roulette-balance" style="font-size: 32px; font-weight: 900; color: var(--primary);">⭐ 1,250</div>
+            </div>
+
+            <div class="roulette-container">
+                <div class="pointer"></div>
+                <div class="roulette-window">
+                    <div class="roulette-track" id="track">
+                        </div>
+                </div>
+            </div>
+
+            <button id="spin-btn" class="btn-empire" onclick="spinRoulette()">
+                ИСПЫТАТЬ УДАЧУ (50 ⭐)
+            </button>
+
+            <div style="margin-top: 30px;">
+                <h3 style="font-size: 12px; color: #666; text-transform: uppercase;">Лента Триумфов</h3>
+                <div class="recent-wins" id="wins-list">
+                    <div class="win-badge">User123: 80 ⭐</div>
+                    <div class="win-badge">AlexK: 20 ⭐</div>
+                    <div class="win-badge">Winner_99: 110 ⭐</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="welcomeModal" class="modal-overlay">
-        <div class="modal-box" style="text-align: center;">
-            <div class="modal-title" style="justify-content: center;">👋 Добро пожаловать!</div>
-            <div class="modal-text" style="text-align: center;">
-                Рады видеть вас в Empire Play Web.
-                <br><br>
-                Испытай удачу в рулетке или открывай кейсы с редкими призами. Не забудь сохранять прогресс!
-            </div>
-            <button class="close-modal" onclick="closeModal('welcomeModal')">Начать игру</button>
+    <nav>
+        <div class="nav-item active" onclick="switchTab('profile', this)">
+            <div class="nav-icon">👤</div>
+            <span>Profile</span>
+            <div class="nav-indicator"></div>
         </div>
-    </div>
+        <div class="nav-item" onclick="switchTab('referrals', this)">
+            <div class="nav-icon">🤝</div>
+            <span>Referrals</span>
+            <div class="nav-indicator"></div>
+        </div>
+        <div class="nav-item" onclick="switchTab('roulette', this)">
+            <div class="nav-icon">🎰</div>
+            <span>Roulette</span>
+            <div class="nav-indicator"></div>
+        </div>
+    </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        // ============================
+        // 1. STATE & DATA
+        // ============================
+        const appState = {
+            balance: 1250,
+            isSpinning: false,
+            items: [
+                { id: 1, name: 'Silver Coin', val: 20, icon: '🪙', weight: 30 },
+                { id: 2, name: 'Bronze Ingots', val: 40, icon: '🧱', weight: 25 },
+                { id: 3, name: 'Empty Box', val: 0, icon: '📦', weight: 20 },
+                { id: 4, name: 'Gold Bars', val: 50, icon: '🧈', weight: 15 },
+                { id: 5, name: 'Money Bag', val: 80, icon: '💰', weight: 10 },
+                { id: 6, name: 'Treasure Chest', val: 110, icon: '💎', weight: 5 },
+                { id: 7, name: 'Royal Crown', val: 65, icon: '👑', weight: 8 },
+                { id: 8, name: 'EMPIRE DIAMOND', val: 500, icon: '💠', weight: 1 } // Ultra rare
+            ]
+        };
 
-        // --- 1. CONFIG & DATA ---
-        let currentBalance = 0;
-        
-        // Попытка получить баланс из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlBalance = parseInt(urlParams.get('balance'));
-        
-        if (!isNaN(urlBalance)) {
-            currentBalance = urlBalance;
-        } else {
-            // Для теста, если открыто не через бота
-            currentBalance = 1000; 
-        }
+        const CARD_WIDTH = 80;
+        const VIEWPORT_WIDTH = window.innerWidth;
 
-        let user = { username: "Гость", firstName: "?" };
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            user.username = tg.initDataUnsafe.user.username || "User";
-            user.firstName = tg.initDataUnsafe.user.first_name.charAt(0).toUpperCase();
-        }
-
-        // --- 2. INITIALIZATION ---
+        // ============================
+        // 2. INITIALIZATION
+        // ============================
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('username').innerText = user.username;
-            document.getElementById('avatar').innerText = user.firstName;
-            updateUI();
-            
-            // Показываем приветствие один раз за сессию
-            if(!sessionStorage.getItem('welcomeShown')) {
-                openModal('welcomeModal');
-                sessionStorage.setItem('welcomeShown', 'true');
+            // Telegram WebApp Init
+            if(window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                Telegram.WebApp.setHeaderColor('#050505');
             }
-            
-            initRoulette();
-            initCaseReel();
+            generateTrack(false); // Initial static track
         });
 
-        function updateUI() {
-            document.getElementById('balance').innerText = Math.floor(currentBalance);
+        function closeModal() {
+            document.getElementById('welcome-modal').style.display = 'none';
         }
 
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.game-container').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+        // ============================
+        // 3. NAVIGATION
+        // ============================
+        function switchTab(viewId, navEl) {
+            // Update Tab UI
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            navEl.classList.add('active');
+
+            // Update View UI
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
         }
 
-        // --- 3. MODALS ---
-        function openModal(id) {
-            document.getElementById(id).style.display = 'flex';
-        }
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        // --- 4. ROULETTE LOGIC ---
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
-        const segments = [
-            { color: '#333', text: '0', val: 0 },
-            { color: '#FFD700', text: 'x2', val: 2 },
-            { color: '#6C5CE7', text: 'x3', val: 3 },
-            { color: '#333', text: '0', val: 0 },
-            { color: '#FFD700', text: 'x5', val: 5 },
-            { color: '#333', text: '0', val: 0 },
-            { color: '#d63031', text: 'x10', val: 10 },
-            { color: '#6C5CE7', text: 'x2', val: 2 }
-        ];
-
-        let startAngle = 0;
-        let arc = Math.PI * 2 / segments.length;
-        let spinTimeout = null;
-        let spinAngleStart = 10;
-        let spinTime = 0;
-        let spinTimeTotal = 0;
-        let isSpinning = false;
-        let currentBet = 0;
-
-        function initRoulette() {
-            drawRouletteWheel();
+        function copyLink(btn) {
+            const input = btn.previousElementSibling;
+            input.select();
+            document.execCommand('copy');
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED";
+            btn.style.borderColor = "#00FF00";
+            btn.style.color = "#00FF00";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.borderColor = "var(--glass-border)";
+                btn.style.color = "white";
+            }, 2000);
         }
 
-        function drawRouletteWheel() {
-            ctx.clearRect(0,0,300,300);
-            for(let i = 0; i < segments.length; i++) {
-                let angle = startAngle + i * arc;
-                ctx.fillStyle = segments[i].color;
-                ctx.beginPath();
-                ctx.arc(150, 150, 140, angle, angle + arc, false);
-                ctx.arc(150, 150, 0, angle + arc, angle, true);
-                ctx.fill();
-                ctx.save();
-                ctx.translate(150 + Math.cos(angle + arc / 2) * 100, 150 + Math.sin(angle + arc / 2) * 100);
-                ctx.rotate(angle + arc / 2 + Math.PI / 2);
-                ctx.fillStyle = "#fff";
-                ctx.font = 'bold 18px Montserrat';
-                ctx.fillText(segments[i].text, -ctx.measureText(segments[i].text).width / 2, 0);
-                ctx.restore();
+        // ============================
+        // 4. ROULETTE ENGINE
+        // ============================
+        
+        // Helper: Weighted Random
+        function getRandomItem() {
+            const totalWeight = appState.items.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            for (const item of appState.items) {
+                if (random < item.weight) return item;
+                random -= item.weight;
             }
+            return appState.items[0];
         }
 
-        function spinWheel() {
-            if(isSpinning) return;
-            const betInput = document.getElementById('rouletteBet');
-            currentBet = parseInt(betInput.value);
+        function generateTrack(isSpinning) {
+            const track = document.getElementById('track');
+            track.innerHTML = '';
             
-            if(isNaN(currentBet) || currentBet <= 0) return tg.showAlert("Некорректная ставка");
-            if(currentBet > currentBalance) return tg.showAlert("Недостаточно средств!");
+            // To simulate infinite scroll and landing, we generate:
+            // 5 items buffer + 50 items spin + WINNER + 5 items buffer
+            // Total ~60-70 items.
+            
+            const totalItems = 70;
+            const winnerIndex = 55; // Fixed position where we want to land (far enough)
+            
+            // Generate DOM elements
+            for(let i = 0; i < totalItems; i++) {
+                const itemData = getRandomItem();
+                const div = document.createElement('div');
+                div.className = 'item-card glass-panel';
+                div.innerText = itemData.icon;
+                div.setAttribute('data-val', itemData.val);
+                
+                if(itemData.id === 8) div.classList.add('item-mythic');
+                if(itemData.id === 6) div.classList.add('item-rare');
 
-            currentBalance -= currentBet;
-            updateUI();
-            
-            isSpinning = true;
-            document.getElementById('spinBtn').disabled = true;
-            
-            spinAngleStart = Math.random() * 10 + 10;
-            spinTime = 0;
-            spinTimeTotal = Math.random() * 3000 + 4000;
-            rotateWheel();
+                // If this is the winner index, we mark it in data attribute for logic
+                if(i === winnerIndex) {
+                    div.id = 'winner-card';
+                    div.dataset.winValue = itemData.val;
+                }
+
+                track.appendChild(div);
+            }
+
+            return winnerIndex;
         }
 
-        function rotateWheel() {
-            spinTime += 30;
-            if(spinTime >= spinTimeTotal) {
-                stopRotateWheel();
+        function spinRoulette() {
+            if (appState.isSpinning) return;
+            if (appState.balance < 50) {
+                alert("Недостаточно средств для ставки!");
                 return;
             }
-            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
-            startAngle += (spinAngle * Math.PI / 180);
-            drawRouletteWheel();
-            spinTimeout = setTimeout(rotateWheel, 30);
-        }
 
-        function stopRotateWheel() {
-            isSpinning = false;
-            document.getElementById('spinBtn').disabled = false;
+            // Deduct cost
+            updateBalance(-50);
+            appState.isSpinning = true;
+            document.getElementById('spin-btn').style.opacity = '0.5';
+            document.getElementById('spin-btn').innerText = "ВРАЩЕНИЕ...";
+
+            // 1. Reset Track Position immediately
+            const track = document.getElementById('track');
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+
+            // 2. Generate new random track
+            const winnerIndex = generateTrack(true);
+            const winnerCard = document.getElementById('winner-card');
+            const winValue = parseInt(winnerCard.dataset.winValue);
+
+            // 3. Calculate Landing Position
+            // Center of screen - Center of card - Offset of card index
+            // Random jitter within the card width (+- 30px) so it doesn't always land dead center
+            const randomJitter = (Math.random() * 40) - 20; 
+            const cardCenter = CARD_WIDTH / 2;
+            const windowCenter = track.parentElement.offsetWidth / 2;
             
-            const degrees = startAngle * 180 / Math.PI + 90;
-            const arcd = 360 / segments.length;
-            const index = Math.floor((360 - degrees % 360) / arcd);
-            
-            const multiplier = segments[index].val;
-            const winAmount = currentBet * multiplier;
-            
-            if(winAmount > 0) {
-                currentBalance += winAmount;
-                tg.showAlert(`🎉 Выигрыш: ${winAmount} ★`);
-            }
-            updateUI();
-        }
+            // Calculate how many pixels to move left
+            // (Index * Width) gives left edge of winner. 
+            // We want center of winner to align with window center.
+            const destination = -((winnerIndex * CARD_WIDTH) + cardCenter - windowCenter + randomJitter);
 
-        // --- 5. CASE LOGIC (FIXED) ---
-        // Строгое определение предметов
-        const caseItems = [
-            { id: 1, val: 100, color: '#555', img: '🪙' },
-            { id: 2, val: 200, color: '#555', img: '🪙' },
-            { id: 3, val: 500, color: '#6C5CE7', img: '💍' },
-            { id: 4, val: 1000, color: '#FFD700', img: '👑' },
-            { id: 5, val: 50, color: '#555', img: '📉' },
-            { id: 6, val: 10000, color: '#d63031', img: '🚀' }
-        ];
-
-        let reelItems = []; // Здесь будет храниться сгенерированная лента
-        const ITEM_WIDTH = 100;
-        const ITEM_MARGIN = 4; // x2 (слева и справа)
-        const FULL_ITEM_WIDTH = ITEM_WIDTH + (ITEM_MARGIN * 2); 
-
-        function initCaseReel() {
-            const reel = document.getElementById('caseReel');
-            reel.innerHTML = '';
-            reelItems = [];
-            
-            // Генерируем 70 предметов для рулетки
-            for(let i=0; i<70; i++) {
-                // Выбираем случайный предмет на основе весов (тут простая рандомизация для визуала)
-                const randItem = caseItems[Math.floor(Math.random() * caseItems.length)];
-                
-                const el = document.createElement('div');
-                el.className = 'case-item';
-                el.style.borderBottomColor = randItem.color;
-                
-                // SVG для иконки
-                const svgIcon = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <text x="50%" y="50%" font-size="70" text-anchor="middle" dy=".3em">${randItem.img}</text>
-                </svg>`;
-                
-                el.innerHTML = `${svgIcon}<span>${randItem.val}</span>`;
-                reel.appendChild(el);
-                
-                // Сохраняем данные в массив, чтобы потом знать, что где лежит
-                reelItems.push(randItem);
-            }
-        }
-
-        function openCase() {
-            const cost = 500;
-            if(currentBalance < cost) return tg.showAlert("Нужно 500 ★");
-            if(document.getElementById('caseBtn').disabled) return;
-
-            currentBalance -= cost;
-            updateUI();
-            
-            const btn = document.getElementById('caseBtn');
-            btn.disabled = true;
-
-            // 1. ОПРЕДЕЛЯЕМ ПОБЕДИТЕЛЯ ЗАРАНЕЕ
-            // Выбираем индекс победителя где-то в конце ленты (между 50 и 60 элементом), чтобы крутилось долго
-            const winIndex = Math.floor(Math.random() * 10) + 50; 
-            const winningItemData = reelItems[winIndex];
-
-            // 2. РАСЧЕТ СМЕЩЕНИЯ (МАТЕМАТИКА)
-            const reel = document.getElementById('caseReel');
-            const containerWidth = document.querySelector('.case-box').offsetWidth;
-            
-            // Нам нужно, чтобы центр winIndex элемента совпал с центром контейнера (containerWidth / 2)
-            // Позиция центра элемента = (winIndex * FULL_ITEM_WIDTH) + (FULL_ITEM_WIDTH / 2)
-            // Добавим немного рандома внутри самого предмета (+/- 20px), чтобы не всегда ровно по центру
-            const randomOffset = Math.floor(Math.random() * 40) - 20;
-            
-            const positionToScroll = (winIndex * FULL_ITEM_WIDTH) + (FULL_ITEM_WIDTH / 2) - (containerWidth / 2) + randomOffset;
-            
-            // 3. ЗАПУСК АНИМАЦИИ
-            reel.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.3, 1)"; // Эффект замедления
-            reel.style.transform = `translateX(-${positionToScroll}px)`;
-
-            // 4. ВЫДАЧА ПРИЗА ПОСЛЕ ОКОНЧАНИЯ
+            // 4. Trigger Animation
+            // Small delay to allow browser to render the reset state
             setTimeout(() => {
-                currentBalance += winningItemData.val;
-                updateUI();
-                tg.showAlert(`📦 Выпало: ${winningItemData.val} ★`);
-                
-                btn.disabled = false;
-                
-                // (Опционально) Сброс рулетки через пару секунд без анимации
-                setTimeout(() => {
-                    reel.style.transition = "none";
-                    reel.style.transform = "translateX(0px)";
-                }, 2000);
-                
-            }, 4000); // Таймер должен совпадать с transition (4s)
+                track.style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)'; // The "CS:GO" curve
+                track.style.transform = `translateX(${destination}px)`;
+            }, 50);
+
+            // 5. Handle Finish
+            setTimeout(() => {
+                handleWin(winValue);
+            }, 5000); // Matches transition duration
         }
 
-        // --- UTILS ---
-        function easeOut(t, b, c, d) {
-            t /= d; t--;
-            return c * (t*t*t + 1) + b;
+        function handleWin(amount) {
+            appState.isSpinning = false;
+            document.getElementById('spin-btn').style.opacity = '1';
+            document.getElementById('spin-btn').innerText = "ИСПЫТАТЬ УДАЧУ (50 ⭐)";
+
+            // Update Logic
+            if (amount > 0) {
+                updateBalance(amount);
+                fireConfetti();
+                // Add to recent list
+                const list = document.getElementById('wins-list');
+                const badge = document.createElement('div');
+                badge.className = 'win-badge';
+                badge.style.borderColor = '#00FF00';
+                badge.innerText = `YOU: ${amount} ⭐`;
+                list.prepend(badge);
+            } else {
+                // Empty box
+                const list = document.getElementById('wins-list');
+                const badge = document.createElement('div');
+                badge.className = 'win-badge';
+                badge.style.borderColor = 'red';
+                badge.innerText = `YOU: 0 ⭐`;
+                list.prepend(badge);
+            }
         }
 
-        // --- SYNC LOGIC ---
-        function saveAndExit() {
-            // Отправляем данные обратно боту
-            const data = JSON.stringify({
-                action: 'save_balance',
-                user_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0,
-                new_balance: currentBalance
-            });
+        function updateBalance(amount) {
+            appState.balance += amount;
+            const formatted = `⭐ ${appState.balance.toLocaleString()}`;
+            document.getElementById('balance-display').innerText = formatted;
+            document.getElementById('roulette-balance').innerText = formatted;
             
-            tg.sendData(data); // Это закроет веб-апп и отправит данные боту
+            // Animation for balance change
+            const bal = document.getElementById('roulette-balance');
+            bal.style.transform = "scale(1.2)";
+            bal.style.color = amount > 0 ? "#00FF00" : "#FF0000";
+            setTimeout(() => {
+                bal.style.transform = "scale(1)";
+                bal.style.color = "var(--primary)";
+            }, 300);
+        }
+
+        // ============================
+        // 5. CONFETTI FX
+        // ============================
+        const canvas = document.getElementById("confetti-canvas");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function fireConfetti() {
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 100,
+                    color: `hsl(${Math.random() * 40 + 30}, 100%, 50%)` // Gold/Orange hues
+                });
+            }
+            requestAnimationFrame(updateConfetti);
+        }
+
+        function updateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                p.vy += 0.2; // Gravity
+
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+
+            if (particles.length > 0) requestAnimationFrame(updateConfetti);
         }
 
     </script>
